@@ -19,18 +19,21 @@ petrocli/
     cli.cpp                # CLI argument parser
     csv.cpp                # CSV handling
     commands.cpp           # application commands
+    validation.cpp         # sample validation
   include/petrocli/        # public headers, mirrors src/
     cli.h
     csv.h
     commands.h
     model.h                # data model
+    validation.h
   data/                    # sample/reference data
     data.csv
   tools/                   # auxiliary scripts
     reference.py
   tests/                   # GoogleTest suite
     CMakeLists.txt
-    placeholder_test.cpp
+    csv_test.cpp
+    validation_test.cpp
   README.md
   AI_LOG.md                # maintained manually via /export
 ```
