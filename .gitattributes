@@ -1,2 +1,3 @@
 * text=auto eol=lf
 *.bat text eol=crlf
+tests/resources/petro_samples_windows.csv text eol=crlf

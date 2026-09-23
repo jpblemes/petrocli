@@ -116,6 +116,36 @@ TEST_F(ReadCsvTest, ThrowsOnInvalidHeader) {
   EXPECT_THROW(ReadCsv(path_.string()), std::runtime_error);
 }
 
+TEST(ReadCsvFixtureTest, ParsesLinuxLineEndings) {
+  const std::filesystem::path path =
+      std::filesystem::path(PETROCLI_TEST_RESOURCES_DIR) / "petro_samples_linux.csv";
+  EXPECT_EQ(ReadCsv(path.string()).size(), 20u);
+}
+
+TEST(ReadCsvFixtureTest, ParsesWindowsLineEndings) {
+  const std::filesystem::path path =
+      std::filesystem::path(PETROCLI_TEST_RESOURCES_DIR) / "petro_samples_windows.csv";
+  EXPECT_EQ(ReadCsv(path.string()).size(), 20u);
+}
+
+TEST(ReadCsvFixtureTest, LinuxAndWindowsFixturesParseIdentically) {
+  const std::filesystem::path resources_dir(PETROCLI_TEST_RESOURCES_DIR);
+  const std::vector<Sample> linux_samples =
+      ReadCsv((resources_dir / "petro_samples_linux.csv").string());
+  const std::vector<Sample> windows_samples =
+      ReadCsv((resources_dir / "petro_samples_windows.csv").string());
+
+  ASSERT_EQ(linux_samples.size(), windows_samples.size());
+  for (std::size_t i = 0; i < linux_samples.size(); ++i) {
+    EXPECT_EQ(linux_samples[i].sample_id, windows_samples[i].sample_id);
+    EXPECT_EQ(linux_samples[i].location, windows_samples[i].location);
+    EXPECT_DOUBLE_EQ(linux_samples[i].depth_m, windows_samples[i].depth_m);
+    EXPECT_DOUBLE_EQ(linux_samples[i].api_gravity, windows_samples[i].api_gravity);
+    EXPECT_DOUBLE_EQ(linux_samples[i].sulfur_pct, windows_samples[i].sulfur_pct);
+    EXPECT_DOUBLE_EQ(linux_samples[i].density_g_cm3, windows_samples[i].density_g_cm3);
+  }
+}
+
 TEST_F(ReadCsvTest, ErrorMessageIncludesLineNumber) {
   WriteFile(path_,
             "sample_id,depth_m,api_gravity,sulfur_pct,density_g_cm3,location\n"

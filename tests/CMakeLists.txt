@@ -19,5 +19,9 @@ target_link_libraries(petrocli_tests PRIVATE
     gtest_main
 )
 
+target_compile_definitions(petrocli_tests PRIVATE
+    PETROCLI_TEST_RESOURCES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources"
+)
+
 include(GoogleTest)
 gtest_discover_tests(petrocli_tests)
