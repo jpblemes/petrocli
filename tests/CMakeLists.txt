@@ -8,7 +8,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(petrocli_tests
-    placeholder_test.cpp
+    csv_test.cpp
 )
 
 target_link_libraries(petrocli_tests PRIVATE
