@@ -32,6 +32,8 @@ petrocli/
     reference.py
   tests/                   # GoogleTest suite
     CMakeLists.txt
+    cli_test.cpp
+    commands_test.cpp
     csv_test.cpp
     validation_test.cpp
   README.md
