@@ -109,7 +109,7 @@ Follow Linux kernel commit conventions:
 - Subject line: `subsystem: summary` in imperative mood (e.g. "fix", not "fixed" or "fixes").
 - Body: explain *why* the change was made, not what the diff already shows.
 - Wrap both subject and body at 72 characters.
-- End with a `Signed-off-by:` trailer.
+- End with a `Signed-off-by:` trailer using `git config user.name`/`user.email` (e.g. via `git commit -s`), never a hardcoded name or email.
 - No AI attribution trailers or co-author lines unless explicitly requested.
 
 Examples:
@@ -122,7 +122,7 @@ delimiter, because the loop exited before appending the final
 empty token. This caused row counts to silently mismatch the
 header on CSVs with trailing commas.
 
-Signed-off-by: João Paulo Borges Lemes <jpblemes@gmail.com>
+Signed-off-by: Full Name <email@example.com>
 ```
 
 ```
@@ -132,7 +132,7 @@ Users need to redirect results to a file for downstream
 processing instead of only printing to stdout. This keeps the
 default behavior unchanged while enabling scripted use.
 
-Signed-off-by: João Paulo Borges Lemes <jpblemes@gmail.com>
+Signed-off-by: Full Name <email@example.com>
 ```
 
 ## Pull Requests
