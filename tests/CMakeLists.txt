@@ -8,6 +8,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(petrocli_tests
+    cli_test.cpp
+    commands_test.cpp
     csv_test.cpp
     validation_test.cpp
 )

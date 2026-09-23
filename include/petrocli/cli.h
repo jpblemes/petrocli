@@ -1,12 +1,23 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace petrocli {
 
-/** Parsed command-line arguments. */
-struct CliOptions {};
+enum class Command {
+  kUnknown,
+  kCheck,
+};
 
-/** Parses command-line arguments into a CliOptions. */
-// TODO: implement argument parsing.
-CliOptions ParseArgs(int argc, char** argv);
+/** Parsed command-line arguments. */
+struct CliOptions {
+  Command command = Command::kUnknown;
+  std::string input_path;
+};
+
+/** Parses `args` (excluding the program name); throws
+ *  std::runtime_error on invalid usage. */
+CliOptions ParseArgs(const std::vector<std::string>& args);
 
 }  // namespace petrocli
