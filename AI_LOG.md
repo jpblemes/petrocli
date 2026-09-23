@@ -1917,3 +1917,1762 @@
 ✻ Cogitated for 2s · done 4:01 AM
 
 ※ recap: Building petrocli, a C++17 CLI tool, incrementally with CMake, tests, and CLAUDE.md conventions kept in sync via git history. CSV reader and model are done and tested; next step is implementing the CLI argument parser in cli.cpp.
+
+❯ /export AI_LOG.md                                                             
+  ⎿  Conversation exported to: /home/joao/Documents/petrocli/AI_LOG.md
+
+※ recap: Building petrocli, a C++17 CLI tool for oil sample CSV data, with CMake and GoogleTest. CSV parsing and Sample model are done and tested; next step is implementing the CLI argument parser in cli.cpp.
+
+❯ remove namespace petrocli. it's a small project it wont have problems with    
+  collisions or something                                                       
+
+  Read 9 files (ctrl+o to expand)
+
+● Write(include/petrocli/cli.h)
+  ⎿  Removed 4 lines
+       1  #pragma once
+       2  
+       3 -namespace petrocli {                                           
+       4 -                                                               
+       3  /** Parsed command-line arguments. */
+       4  struct CliOptions {};
+       5  
+       6  /** Parses command-line arguments into a CliOptions. */
+       7  // TODO: implement argument parsing.
+       8  CliOptions ParseArgs(int argc, char** argv);
+      11 -                                                               
+      12 -}  // namespace petrocli                                       
+
+● Write(include/petrocli/commands.h)
+  ⎿  Removed 4 lines
+       2  
+       3  #include "petrocli/cli.h"
+       4  
+       5 -namespace petrocli {                                           
+       6 -                                                               
+       5  /** Runs the command selected by `options`; returns the exit co
+          de. */
+       6  // TODO: implement command dispatch.
+       7  int RunCommand(const CliOptions& options);
+      10 -                                                               
+      11 -}  // namespace petrocli                                       
+
+● Write(include/petrocli/csv.h)
+  ⎿  Removed 4 lines
+       5  
+       6  #include "petrocli/model.h"
+       7  
+       8 -namespace petrocli {                                           
+       9 -                                                               
+       8  /** Splits a CSV line into fields on commas; no escaping. */
+       9  std::vector<std::string> SplitCsvLine(const std::string& line);
+      10  
+     ...
+      16  
+      17  /** Reads samples from `path`; throws `path:line: reason` on fa
+          ilure. */
+      18  std::vector<Sample> ReadCsv(const std::string& path);
+      21 -                                                               
+      22 -}  // namespace petrocli                                       
+
+● Write(include/petrocli/model.h)
+  ⎿  Removed 4 lines
+      2  
+      3  #include <string>
+      4  
+      5 -namespace petrocli {                                            
+      6 -                                                                
+      5  /** One oil sample record, as read from the sample CSV. */
+      6  struct Sample {
+      7    std::string sample_id;
+     ...
+      11    double density_g_cm3;
+      12    std::string location;
+      13  };
+      16 -                                                               
+      17 -}  // namespace petrocli                                       
+
+● Write(src/cli.cpp)
+  ⎿  Removed 4 lines
+       1  #include "petrocli/cli.h"
+       2  
+       3 -namespace petrocli {                                           
+       4 -                                                               
+       3  CliOptions ParseArgs(int argc, char** argv) {
+       4    (void)argc;
+       5    (void)argv;
+       6    return CliOptions{};
+       7  }
+      10 -                                                               
+      11 -}  // namespace petrocli                                       
+
+● Write(src/commands.cpp)
+  ⎿  Removed 4 lines
+       1  #include "petrocli/commands.h"
+       2  
+       3 -namespace petrocli {                                           
+       4 -                                                               
+       3  int RunCommand(const CliOptions& options) {
+       4    (void)options;
+       5    return 0;
+       6  }
+       9 -                                                               
+      10 -}  // namespace petrocli                                       
+
+● Write(src/csv.cpp)  ⎿  Removed 4 lines
+       5  #include <string>
+       6  #include <vector>
+       7  
+       8 -namespace petrocli {                                           
+       9 -                                                               
+       8  namespace {
+       9  
+      10  // Throws if `field` isn't entirely a valid number.
+     ...
+       95  
+       96    return samples;
+       97  }
+      100 -                                                              
+      101 -}  // namespace petrocli                                      
+
+● Write(src/main.cpp)
+  ⎿  Added 2 lines, removed 2 lines
+      2  #include "petrocli/commands.h"
+      3  
+      4  int main(int argc, char** argv) {
+      5 -  const petrocli::CliOptions options = petrocli::ParseArgs(argc,
+        - argv);                                                         
+      6 -  return petrocli::RunCommand(options);                         
+      5 +  const CliOptions options = ParseArgs(argc, argv);             
+      6 +  return RunCommand(options);                                   
+      7  }
+
+● Now updating the test file, dropping just the outer petrocli namespace and
+  keeping the inner anonymous namespace.
+
+● Update(tests/csv_test.cpp)
+  ⎿  Removed 1 line
+      10  
+      11  #include "petrocli/model.h"
+      12  
+      13 -namespace petrocli {                                           
+      13  namespace {
+      14  
+      15  void WriteFile(const std::filesystem::path& path, const std::st
+          ring& content) {
+
+● Update(tests/csv_test.cpp)
+  ⎿  Removed 1 line
+      132  }
+      133  
+      134  }  // namespace
+      135 -}  // namespace petrocli                                      
+
+● Rebuilding to confirm everything still compiles and passes.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Builds clean, all 16 tests pass. Removed namespace petrocli from every file
+  (cli.h/.cpp, commands.h/.cpp, csv.h/.cpp, model.h, main.cpp, csv_test.cpp) —
+  all symbols are now at global scope, with main.cpp and csv_test.cpp dropping
+  their petrocli:: qualifications accordingly. The internal anonymous namespaces
+  (in csv.cpp and csv_test.cpp) were left as-is since those aren't namespace 
+  petrocli. Nothing committed yet.
+
+✻ Baked for 57s · done 2:45 PM
+
+※ recap: Setting up petrocli, a C++17 CLI tool for oil sample data, with CSV reading now implemented and tested. Just removed the petrocli namespace project-wide and confirmed the build and tests still pass; nothing's committed yet.
+
+❯ in fact undo this change of namespace petrocli for now                        
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All these changes are still uncommitted, so I'll just discard them and restore
+  the committed state (which already has namespace petrocli).
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Working tree is clean and back to the committed state, all files have
+  namespace petrocli restored. Rebuilding to confirm.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Undone. namespace petrocli is back everywhere (nothing had been committed, so
+  this was a straightforward git checkout of the working tree). Build's clean,
+  all 16 tests pass.
+
+✻ Worked for 24s · done 2:54 PM
+
+❯ i did a change on readcsv function. check it                                  
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● Builds clean, existing 16 tests still pass. Let me verify the CRLF fix
+  actually works, since nothing currently tests it.
+
+  Made 1 scratchpad edit +16, ran 2 shell commands (ctrl+o to expand)
+
+● location is clean 4-char ALFA, no trailing \r — confirms the fix works:
+  without it, \r would've stuck to the last field (location) and either broken
+  header validation or corrupted the last field on every row.
+
+  Review of the change:
+
+  - Correct and it matters. Previously ReadCsv never handled \r, silently
+    violating CLAUDE.md's own "must handle both LF and CRLF" rule — a CRLF file
+    would fail header validation entirely, or leave a stray \r in every row's
+    location field.
+  - Placement is right. The strip happens in ReadCsv, the only function touching
+    raw file lines, so SplitCsvLine stays pure and doesn't need CRLF-awareness.
+    Consistent with the project's "don't mix file parsing with business logic"
+    split.
+  - Order is correct in both spots: strip \r before checking line.empty() or
+    calling IsValidHeader/ParseSampleFields, so a lone \r line (blank line,
+    CRLF-terminated) is correctly treated as blank and skipped.
+  - No regression on LF-only input: line.back() == '\r' never fires when getline
+    already stripped just \n.
+
+  Two things worth calling out, not fixed automatically since you're mid-edit:
+
+  1. Duplicated logic. The same 3-line "strip trailing \r" block appears twice
+     (header read + loop). Worth pulling into a small local helper, e.g.
+     StripTrailingCr(std::string& line), matching the project's "small testable
+     functions" preference.
+  2. No test coverage for it. All 16 existing tests use WriteFile with plain \n;
+     nothing in csv_test.cpp currently exercises a CRLF file, so this fix could
+     regress silently later.
+
+  Want me to extract the helper and add a CRLF test case?
+
+✻ Worked for 50s · done 2:55 PM
+
+❯ yes, do both                                                                  
+
+● Update(src/csv.cpp)
+  ⎿  Added 7 lines
+       9  
+      10  namespace {
+      11  
+      12 +// Removes a trailing '\r' so CRLF-terminated lines parse like 
+         +LF ones.                                                       
+      13 +void StripTrailingCr(std::string& line) {                      
+      14 +  if (!line.empty() && line.back() == '\r') {                  
+      15 +    line.pop_back();                                           
+      16 +  }                                                            
+      17 +}                                                              
+      18 +                                                               
+      19  // Throws if `field` isn't entirely a valid number.
+      20  double ParseDouble(const std::string& field, const std::string&
+           column_name) {
+      21    std::size_t chars_consumed = 0;
+
+● Update(src/csv.cpp)
+  ⎿  Added 1 line, removed 4 lines
+      82    if (!std::getline(file, line)) {
+      83      throw std::runtime_error(path + ": empty file, expected a h
+          eader row");
+      84    }
+      85 +  StripTrailingCr(line);                                       
+      86  
+      86 -  if (!line.empty() && line.back() == '\r') {                  
+      87 -    line.pop_back();                                           
+      88 -  }                                                            
+      89 -                                                               
+      87    if (!IsValidHeader(SplitCsvLine(line))) {
+      88      throw std::runtime_error(
+      89          path +
+
+● Update(src/csv.cpp)
+  ⎿  Added 1 line, removed 4 lines
+       96  
+       97    while (std::getline(file, line)) {
+       98      ++line_number;
+       99 +    StripTrailingCr(line);                                    
+      100  
+      100 -    if (!line.empty() && line.back() == '\r') {               
+      101 -      line.pop_back();                                        
+      102 -    }                                                         
+      103 -                                                              
+      101      if (line.empty()) {
+      102        continue;
+      103      }
+
+  Read 1 file (ctrl+o to expand)
+
+● Clean. Now adding a CRLF test case to csv_test.cpp.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(tests/csv_test.cpp)
+  ⎿  Added 13 lines
+       94    EXPECT_EQ(samples[1].location, "ALFA");
+       95  }
+       96  
+       97 +TEST_F(ReadCsvTest, HandlesCrlfLineEndings) {                 
+       98 +  WriteFile(path_,                                            
+       99 +            "sample_id,depth_m,api_gravity,sulfur_pct,density_
+          +g_cm3,location\r\n"                                           
+      100 +            "S001,1200,29.8,1.10,0.878,ALFA\r\n"              
+      101 +            "S002,1250,31.2,0.85,0.865,ALFA\r\n");            
+      102 +                                                              
+      103 +  const std::vector<Sample> samples = ReadCsv(path_.string());
+      104 +                                                              
+      105 +  ASSERT_EQ(samples.size(), 2u);                              
+      106 +  EXPECT_EQ(samples[0].location, "ALFA");                     
+      107 +  EXPECT_EQ(samples[1].location, "ALFA");                     
+      108 +}                                                             
+      109 +                                                              
+      110  TEST_F(ReadCsvTest, SkipsBlankLines) {
+      111    WriteFile(path_,
+      112              "sample_id,depth_m,api_gravity,sulfur_pct,density_
+           g_cm3,location\n"
+
+  Ran 1 shell command (ctrl+o to expand)
+● All 17 tests pass, including the new ReadCsvTest.HandlesCrlfLineEndings.
+  Summary:
+
+  - Extracted StripTrailingCr(std::string& line) into the anonymous namespace in
+    csv.cpp, replacing the duplicated 3-line block at both call sites (header
+    line and the row loop).
+  - Added ReadCsvTest.HandlesCrlfLineEndings in csv_test.cpp, parsing a
+    CRLF-terminated file and asserting the last field (location) comes out clean
+    with no stray \r.
+
+  Nothing's committed — let me know if you want this folded into the existing
+  csv: commit or added as its own.
+
+✻ Cooked for 31s · done 2:59 PM
+
+❯ commit the CRLF fix and tests                                                 
+
+  Committed 0be3366, ran 1 shell command (ctrl+o to expand)
+
+● Committed as 0be3366. I noticed there's also a b5238eb AI_LOG.md commit in the
+  log that I didn't create — likely from your /export run earlier
+  auto-committing. Let me know if that one needs a proper commit message or
+  should be left as-is.
+
+✻ Worked for 13s · done 3:00 PM
+
+❯ i amended with the other commit, check current state of commits               
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+● Current state, 8 commits:
+
+  ea93ba4 AI_LOG.md
+  9337416 csv: implement CSV reading and add tests
+  5d05c53 model: add Sample struct for oil sample records
+  f5e9207 build: add .gitignore for the out-of-source build directory
+  500ebcb build: add .gitattributes for line-ending normalization
+  d772232 build: add initial project structure
+  8fb7614 docs: add CLAUDE.md project conventions
+  e344faf Initial commit
+
+  What happened: you folded the CRLF fix (StripTrailingCr + the
+  HandlesCrlfLineEndings test) into the original csv: implement CSV reading and 
+  add tests commit rather than keeping it as the separate csv: fix CRLF line 
+  endings in ReadCsv commit I'd made — so that standalone fix commit no longer
+  exists; its content is now part of 9337416. AI_LOG.md sits on top as its own
+  commit (message is just AI_LOG.md, no body, not following the subsystem: 
+  summary + why-body format from CLAUDE.md's Commit Format section).
+
+  Working tree is clean, build succeeds, all 17 tests pass. One thing to flag:
+  the AI_LOG.md commit's message doesn't match your own Commit Format convention
+  (no subsystem: prefix, no body explaining why) — want me to reword it, or is
+  that one meant to stay as-is since it's just the /export log dump?
+
+✻ Sautéed for 28s · done 3:02 PM
+
+❯ leave it as is for now, i will rebase later with more ai logs.                
+
+● Sounds good, I'll leave AI_LOG.md and the current history untouched. Let me
+  know when you're ready to rebase or want anything else done.
+
+✻ Cogitated for 1s · done 3:03 PM
+
+※ recap: We've been scaffolding petrocli (a C++17 CLI) with CLAUDE.md conventions, project structure, a Sample model, and a working CSV reader with tests, all committed. Next: implement CLI argument parsing in cli.cpp when you're ready.
+
+❯ i just rebased again. check it                                                
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● The rebase brought in a new change that broke the build: std::isfinite is used
+  in ParseDouble but <cmath> isn't included. Let me look.
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+● Good news on the rebase itself: history looks intact. master now has:
+
+  08f9a67 csv: implement CSV reading and add tests
+  faa00c4 AI_LOG.md
+  5d05c53 model: add Sample struct for oil sample records
+  ...
+
+  The AI_LOG.md commit and the csv commit swapped order (AI_LOG.md now comes
+  before csv instead of after), but the CRLF fix (StripTrailingCr) and its test
+  are still intact inside the csv commit, so nothing was lost there.
+
+  However, there's an uncommitted change sitting on top that breaks the build:
+  src/csv.cpp line 28 now has
+
+  if (chars_consumed != field.size() || !std::isfinite(value)) {
+
+  but the file only includes <fstream>, <stdexcept>, <string>, <vector> — no
+  <cmath>, so std::isfinite doesn't compile:
+
+  error: 'isfinite' is not a member of 'std'
+
+  This wasn't part of the rebase — it's a working-tree edit not yet committed
+  (git status shows modified: src/csv.cpp). Looks like you're mid-edit, probably
+  adding a NaN/Infinity guard to reject non-finite numeric fields. Want me to
+  add #include <cmath> to fix the build, or is this still in progress on your
+  end?
+
+✻ Cogitated for 1m 2s · done 3:07 PM
+
+❯ i did some fixes on parse double check it                                     
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Build's fixed, all 17 tests pass. Let me confirm the isfinite check actually
+  catches what it's meant to (previously "inf"/"nan" would have silently passed
+  as valid numbers).
+
+  Made 1 scratchpad edit +16, ran 1 shell command (ctrl+o to expand)
+
+● Confirmed: all four now get correctly rejected. Before this fix, std::stod
+  happily parses "inf"/"nan"/"Infinity" (they're valid per the C++ standard's
+  strtod-based grammar) and would have silently produced a Sample with a
+  NaN/Infinity field — a real gap the chars_consumed check alone didn't catch.
+  Good fix.
+
+  One thing worth cleaning up: #include <cmath> was appended at the end instead
+  of in alphabetical order, which breaks CLAUDE.md's include-order rule (std-lib
+  group must be alphabetized):
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(src/csv.cpp)
+  ⎿  Added 1 line, removed 1 line
+       1  #include "petrocli/csv.h"
+       2  
+       3 +#include <cmath>                                               
+       4  #include <fstream>
+       5  #include <stdexcept>
+       6  #include <string>
+       7  #include <vector>
+       7 -#include <cmath>                                               
+       8  
+       9  namespace petrocli {
+      10  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fixed the include order too. Summary:
+
+  - Your fix: added #include <cmath> and || !std::isfinite(value) to ParseDouble
+    — correctly rejects "inf"/"-inf"/"nan"/"Infinity", which std::stod would
+    otherwise silently accept as valid numbers. Verified with a scratch test;
+    build's green, all 17 tests pass.
+  - I reordered the includes (<cmath> now alphabetically first among the std-lib
+    group) to match CLAUDE.md's include-order rule; rebuilt and retested, still
+    green.
+
+  Nothing's committed — still uncommitted in the working tree, plus one test
+  worth noting: there's no test yet covering this inf/nan rejection, just like
+  the CRLF case earlier. Want me to add one before you commit?
+
+✻ Cogitated for 45s · done 3:09 PM
+
+❯ i think a test for this case is needed                                        
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(tests/csv_test.cpp)
+  ⎿  Added 9 lines
+      80                 std::runtime_error);
+      81  }
+      82  
+      83 +TEST(ParseSampleFieldsTest, ThrowsOnNonFiniteNumericField) {   
+      84 +  EXPECT_THROW(ParseSampleFields({"S001", "1200", "inf", "1.10"
+         +, "0.878", "ALFA"}),                                           
+      85 +               std::runtime_error);                            
+      86 +  EXPECT_THROW(ParseSampleFields({"S001", "1200", "-inf", "1.10
+         +", "0.878", "ALFA"}),                                          
+      87 +               std::runtime_error);                            
+      88 +  EXPECT_THROW(ParseSampleFields({"S001", "1200", "nan", "1.10"
+         +, "0.878", "ALFA"}),                                           
+      89 +               std::runtime_error);                            
+      90 +}                                                              
+      91 +                                                               
+      92  TEST_F(ReadCsvTest, ParsesAllRows) {
+      93    WriteFile(path_,
+      94              "sample_id,depth_m,api_gravity,sulfur_pct,density_g
+          _cm3,location\n"
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Added ParseSampleFieldsTest.ThrowsOnNonFiniteNumericField covering inf, -inf,
+  and nan. All 18 tests pass. Nothing committed yet.
+
+✻ Worked for 14s · done 3:09 PM
+
+❯ i did another change                                                          
+
+  Searched for 1 pattern, read 1 file, ran 1 shell command (ctrl+o to expand)
+● Just the line_number type change: int → std::size_t. That's a reasonable
+  correctness tweak (a line count can't be negative), and ++line_number /
+  std::to_string(line_number) both still work fine with size_t. One formatting
+  nit though: there's a double space between std::size_t and line_number.
+
+● Update(src/csv.cpp)
+  ⎿  Added 1 line, removed 1 line
+      93    }
+      94  
+      95    std::vector<Sample> samples;
+      96 -  std::size_t  line_number = 1;                                
+      96 +  std::size_t line_number = 1;                                 
+      97  
+      98    while (std::getline(file, line)) {
+      99      ++line_number;
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fixed the double space, no compile warnings, all 18 tests still pass. Change
+  is fine as-is otherwise — no other issues to flag.
+
+✻ Brewed for 30s · done 3:11 PM
+
+❯ amend this change to the commit csv: implement CSV reading and add tests      
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● csv: implement CSV reading and add tests is HEAD, so this is a straightforward
+  amend.
+
+  Amended commit ab6bfb1 (ctrl+o to expand)
+
+● Amended, 08f9a67 → ab6bfb1, same message. Working tree clean.
+
+✻ Crunched for 12s · done 3:12 PM
+
+❯ build it and run the tests                                                    
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Build succeeded, all 18 tests pass.
+
+✻ Cooked for 13s · done 3:13 PM
+
+❯ im worried about the csv inputs, i think it's better to have validation area  
+  so we can keep tests related to input there. analyze this and give me your    
+  perspective. dont do any changes yet.                                         
+
+● A few things worth separating here, because "validation" today is actually two
+  different concerns wearing one hat:
+
+  What's currently there. ParseSampleFields/ParseDouble do syntactic validation:
+  right field count, parseable number, finite value. That's not really a
+  separate concern from parsing, it's "can this text even become a Sample."
+  There's no domain validation yet: nothing checks that api_gravity is a
+  plausible oil sample value, that sulfur_pct isn't negative, that location is a
+  known site, etc.
+
+  The real question is which one you're worried about. If you're anticipating
+  domain rules (plausible ranges, non-empty codes, known locations), that's a
+  genuinely different responsibility from parsing: parsing asks "is this
+  well-formed," validation asks "is this believable." Those want to be testable
+  independently, and validation might eventually need to run on Samples that
+  didn't come from CSV at all. That's a real seam.
+
+  My take: don't create a new validation.h/.cpp/test file yet. CLAUDE.md's
+  structure is deliberately minimal and "implement only what's requested" cuts
+  against standing up a module for rules that don't exist. Instead, when you
+  have concrete domain rules to add, I'd add one Validate(const Sample&)
+  function next to ParseSampleFields in csv.cpp/csv.h, called as a distinct step
+  after parsing succeeds (parse text → Sample, then validate the Sample). That
+  gives you the separation you want — a ValidateSampleTest test suite distinct
+  from the parsing tests — without a premature file split. If validation logic
+  grows enough to feel crowded in csv.cpp, that's the natural trigger to promote
+  it to its own file later, once you actually know its shape.
+
+  Trade-off either way: splitting now buys you a clean seam before the code gets
+  messy, but risks guessing the wrong boundary since you don't have the actual
+  rules yet; waiting risks a slightly awkward refactor later but keeps the
+  codebase honest about what's actually implemented.
+
+✻ Baked for 41s · done 3:16 PM
+
+❯ i think we can adapt to modularize the validation and put there               
+
+  Read 5 files (ctrl+o to expand)
+
+● Proceeding with the modularization. Plan: split ParseDouble (stays purely
+  syntactic — can this text become a double) from a new ValidateSample (domain
+  check — is this Sample's data finite/plausible) in a new validation.h/.cpp
+  module, with its own validation_test.cpp. I'll also fix a stale line in
+  CLAUDE.md's Project Structure tree that still lists the old
+  placeholder_test.cpp.
+
+● Write(include/petrocli/validation.h)
+  ⎿  Wrote 11 lines to include/petrocli/validation.h
+      1 #pragma once
+      2 
+      3 #include "petrocli/model.h"
+      4 
+      5 namespace petrocli {
+      6 
+      7 /** Throws std::runtime_error, naming the field, if `sample` has 
+        a
+      8  *  non-finite numeric value. */
+      9 void ValidateSample(const Sample& sample);
+     … +1 line (ctrl+o to expand)
+
+● Write(src/validation.cpp)
+  ⎿  Wrote 27 lines to src/validation.cpp
+      1 #include "petrocli/validation.h"
+      2 
+      3 #include <cmath>
+      4 #include <stdexcept>
+      5 #include <string>
+      6 
+      7 namespace petrocli {
+      8 
+      9 namespace {
+     … +18 lines (ctrl+o to expand)
+
+● Now updating csv.cpp: ParseDouble goes back to purely syntactic, and
+  ParseSampleFields calls ValidateSample after building the struct.
+
+● Update(src/csv.cpp)
+  ⎿  Added 2 lines, removed 1 line
+       1  #include "petrocli/csv.h"
+       2  
+       3 -#include <cmath>                                               
+       3  #include <fstream>
+       4  #include <stdexcept>
+       5  #include <string>
+       6  #include <vector>
+       7  
+       8 +#include "petrocli/validation.h"                               
+       9 +                                                               
+      10  namespace petrocli {
+      11  
+      12  namespace {
+
+● Update(src/csv.cpp)
+  ⎿  Added 1 line, removed 1 line
+      27    } catch (const std::exception&) {
+      28      throw std::runtime_error("invalid " + column_name + " value
+          : '" + field + "'");
+      29    }
+      30 -  if (chars_consumed != field.size() || !std::isfinite(value)) 
+         -{                                                              
+      30 +  if (chars_consumed != field.size()) {                        
+      31      throw std::runtime_error("invalid " + column_name + " value
+          : '" + field + "'");
+      32    }
+      33    return value;
+
+● Update(src/csv.cpp)
+  ⎿  Added 1 line
+      70    sample.sulfur_pct = ParseDouble(fields[3], "sulfur_pct");
+      71    sample.density_g_cm3 = ParseDouble(fields[4], "density_g_cm3"
+          );
+      72    sample.location = fields[5];
+      73 +  ValidateSample(sample);                                      
+      74    return sample;
+      75  }
+      76  
+
+● Now updating the CMake sources to build the new module.
+
+● Update(src/CMakeLists.txt)
+  ⎿  Added 1 line
+      2      cli.cpp
+      3      csv.cpp
+      4      commands.cpp
+      5 +    validation.cpp                                              
+      6  )
+      7  
+      8  target_include_directories(petrocli_lib PUBLIC
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(tests/CMakeLists.txt)
+  ⎿  Added 1 line
+       9  
+      10  add_executable(petrocli_tests
+      11      csv_test.cpp
+      12 +    validation_test.cpp                                        
+      13  )
+      14  
+      15  target_link_libraries(petrocli_tests PRIVATE
+
+● Now the dedicated validation test file.
+● Write(tests/validation_test.cpp)
+  ⎿  Wrote 46 lines to tests/validation_test.cpp
+       1 #include "petrocli/validation.h"
+       2 
+       3 #include <limits>
+       4 #include <stdexcept>
+       5 
+       6 #include <gtest/gtest.h>
+       7 
+       8 #include "petrocli/model.h"
+       9 
+      10 namespace petrocli {
+     … +36 lines (ctrl+o to expand)
+
+● Now trimming csv_test.cpp: replace the exhaustive non-finite test with a
+  single thin wiring check, since exhaustive coverage now lives in
+  validation_test.cpp.
+
+● Update(tests/csv_test.cpp)
+  ⎿  Added 3 lines, removed 5 lines
+      80                 std::runtime_error);
+      81  }
+      82  
+      83 -TEST(ParseSampleFieldsTest, ThrowsOnNonFiniteNumericField) {   
+      83 +TEST(ParseSampleFieldsTest, RejectsNonFiniteValue) {           
+      84 +  // Exhaustive per-field coverage lives in validation_test.cpp
+         +; this just                                                    
+      85 +  // confirms ParseSampleFields wires in ValidateSample.       
+      86    EXPECT_THROW(ParseSampleFields({"S001", "1200", "inf", "1.10"
+          , "0.878", "ALFA"}),
+      87                 std::runtime_error);
+      86 -  EXPECT_THROW(ParseSampleFields({"S001", "1200", "-inf", "1.10
+         -", "0.878", "ALFA"}),                                          
+      87 -               std::runtime_error);                            
+      88 -  EXPECT_THROW(ParseSampleFields({"S001", "1200", "nan", "1.10"
+         -, "0.878", "ALFA"}),                                           
+      89 -               std::runtime_error);                            
+      88  }
+      89  
+      90  TEST_F(ReadCsvTest, ParsesAllRows) {
+
+● Update(tests/csv_test.cpp)
+  ⎿  Added 1 line, removed 2 lines
+      81  }
+      82  
+      83  TEST(ParseSampleFieldsTest, RejectsNonFiniteValue) {
+      84 -  // Exhaustive per-field coverage lives in validation_test.cpp
+         -; this just                                                    
+      85 -  // confirms ParseSampleFields wires in ValidateSample.       
+      84 +  // Per-field coverage lives in validation_test.cpp; this just
+         + checks wiring.                                                
+      85    EXPECT_THROW(ParseSampleFields({"S001", "1200", "inf", "1.10"
+          , "0.878", "ALFA"}),
+      86                 std::runtime_error);
+      87  }
+
+● Now updating CLAUDE.md's Project Structure tree — adding the validation module
+  and fixing the stale placeholder_test.cpp line.
+
+● Update(CLAUDE.md)
+  ⎿  Added 4 lines, removed 1 line
+      19      cli.cpp                # CLI argument parser
+      20      csv.cpp                # CSV handling
+      21      commands.cpp           # application commands
+      22 +    validation.cpp         # sample validation                 
+      23    include/petrocli/        # public headers, mirrors src/
+      24      cli.h
+      25      csv.h
+      26      commands.h
+      27      model.h                # data model
+      28 +    validation.h                                               
+      29    data/                    # sample/reference data
+      30      data.csv
+      31    tools/                   # auxiliary scripts
+      32      reference.py
+      33    tests/                   # GoogleTest suite
+      34      CMakeLists.txt
+      33 -    placeholder_test.cpp                                       
+      35 +    csv_test.cpp                                               
+      36 +    validation_test.cpp                                        
+      37    README.md
+      38    AI_LOG.md                # maintained manually via /export
+      39  ```
+
+● Now rebuilding and testing everything.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All 23 tests pass. Summary of the modularization:
+
+  - New include/petrocli/validation.h / src/validation.cpp: ValidateSample(const
+    Sample&) checks all four numeric fields are finite, throwing
+    std::runtime_error naming the field. This is the domain-validation layer,
+    separate from parsing.
+  - csv.cpp: ParseDouble is back to purely syntactic (can this text become a
+    double), no longer knows about finiteness. ParseSampleFields now calls
+    ValidateSample(sample) after building the struct, as an explicit
+    parse-then-validate pipeline.
+  - tests/validation_test.cpp (new): exhaustive per-field coverage — valid
+    sample passes, each of the four numeric fields rejected individually when
+    infinite/NaN.
+  - tests/csv_test.cpp: trimmed to one thin wiring test (RejectsNonFiniteValue)
+    confirming ParseSampleFields actually calls into validation, with a comment
+    pointing to where the real coverage lives.
+  - CMakeLists.txt (src/ and tests/) updated to build the new files.
+  - CLAUDE.md: Project Structure tree updated to include
+    validation.h/.cpp/_test.cpp; also fixed a stale leftover
+    (placeholder_test.cpp) that should've been csv_test.cpp/validation_test.cpp
+    from an earlier change.
+
+  Nothing committed yet — let me know if you want this as its own commit or
+  squashed into something else.
+
+✻ Cooked for 2m 13s · done 3:21 PM
+
+❯ add validation functions for the input csv, require the header to match       
+  exactly sample_id,depth_m,api_gravity,sulfur_pct,density_g_cm3,location,      
+  require exactly six columns per data row, validate all numeric conversions,   
+  require depth_m to be an integer greater than or equal to zero and require    
+  location to be non empty. existent checks that are related to validation      
+  should be moved to there (check again)                                        
+
+  Read 6 files (ctrl+o to expand)
+
+● Now writing the full validation module and slimming csv.cpp down to purely
+  mechanical concerns.
+
+● Write(include/petrocli/validation.h)
+  ⎿  Added 15 lines, removed 2 lines
+       1  #pragma once
+       2  
+       3 +#include <string>                                              
+       4 +#include <vector>                                              
+       5 +                                                               
+       6  #include "petrocli/model.h"
+       7  
+       8  namespace petrocli {
+       9  
+       7 -/** Throws std::runtime_error, naming the field, if `sample` ha
+         -s a                                                            
+       8 - *  non-finite numeric value. */                               
+      10 +/** True if `fields` are the six expected columns, in order. */
+      11 +bool IsValidHeader(const std::vector<std::string>& fields);    
+      12 +                                                               
+      13 +/** Throws std::runtime_error if `fields` doesn't have exactly 
+         +six columns. */                                                
+      14 +void ValidateFieldCount(const std::vector<std::string>& fields)
+         +;                                                              
+      15 +                                                               
+      16 +/** Converts `field` to a finite double; throws std::runtime_er
+         +ror,                                                           
+      17 + *  naming `field_name`, if it isn't a clean, finite number. */
+      18 +double ValidateNumericField(const std::string& field, const std
+         +::string& field_name);                                         
+      19 +                                                               
+      20 +/** Throws std::runtime_error if `sample` has a non-finite valu
+         +e, a                                                           
+      21 + *  negative or non-integer depth_m, or an empty location. */  
+      22  void ValidateSample(const Sample& sample);
+      23  
+      24  }  // namespace petrocli
+
+● Write(src/validation.cpp)
+  ⎿  Added 36 lines
+      3  #include <cmath>
+      4  #include <stdexcept>
+      5  #include <string>
+      6 +#include <vector>                                               
+      7  
+      8  namespace petrocli {
+      9  
+     ...
+      18  
+      19  }  // namespace
+      20  
+      21 +bool IsValidHeader(const std::vector<std::string>& fields) {   
+      22 +  static const std::vector<std::string> kExpectedHeader = {    
+      23 +      "sample_id",  "depth_m",       "api_gravity",            
+      24 +      "sulfur_pct", "density_g_cm3", "location"};              
+      25 +  return fields == kExpectedHeader;                            
+      26 +}                                                              
+      27 +                                                               
+      28 +void ValidateFieldCount(const std::vector<std::string>& fields)
+         + {                                                             
+      29 +  constexpr std::size_t kFieldCount = 6;                       
+      30 +  if (fields.size() != kFieldCount) {                          
+      31 +    throw std::runtime_error("expected 6 fields, got " + std::t
+         +o_string(fields.size()));                                      
+      32 +  }                                                            
+      33 +}                                                              
+      34 +                                                               
+      35 +double ValidateNumericField(const std::string& field, const std
+         +::string& field_name) {                                        
+      36 +  std::size_t chars_consumed = 0;                              
+      37 +  double value = 0.0;                                          
+      38 +  try {                                                        
+      39 +    value = std::stod(field, &chars_consumed);                 
+      40 +  } catch (const std::exception&) {                            
+      41 +    throw std::runtime_error("invalid " + field_name + " value:
+         + '" + field + "'");                                            
+      42 +  }                                                            
+      43 +  if (chars_consumed != field.size() || !std::isfinite(value)) 
+         +{                                                              
+      44 +    throw std::runtime_error("invalid " + field_name + " value:
+         + '" + field + "'");                                            
+      45 +  }                                                            
+      46 +  return value;                                                
+      47 +}                                                              
+      48 +                                                               
+      49  void ValidateSample(const Sample& sample) {
+      50    RequireFinite(sample.depth_m, "depth_m");
+      51    RequireFinite(sample.api_gravity, "api_gravity");
+      52    RequireFinite(sample.sulfur_pct, "sulfur_pct");
+      53    RequireFinite(sample.density_g_cm3, "density_g_cm3");
+      54 +                                                               
+      55 +  if (sample.depth_m < 0.0 || sample.depth_m != std::trunc(samp
+         +le.depth_m)) {                                                 
+      56 +    throw std::runtime_error("invalid depth_m value: must be a 
+         +non-negative integer");                                        
+      57 +  }                                                            
+      58 +  if (sample.location.empty()) {                               
+      59 +    throw std::runtime_error("invalid location value: must be n
+         +on-empty");                                                    
+      60 +  }                                                            
+      61  }
+      62  
+      63  }  // namespace petrocli
+
+● Now trimming csv.h (drop IsValidHeader, now owned by validation) and csv.cpp
+  (drop ParseDouble/inline field-count check, delegate to validation).
+
+● Write(include/petrocli/csv.h)
+  ⎿  Removed 3 lines
+      10  /** Splits a CSV line into fields on commas; no escaping. */
+      11  std::vector<std::string> SplitCsvLine(const std::string& line);
+      12  
+      13 -/** True if `fields` are the six expected columns, in order. */
+      14 -bool IsValidHeader(const std::vector<std::string>& fields);    
+      15 -                                                               
+      13  /** Parses one split row into a Sample; throws on bad count or 
+          value. */
+      14  Sample ParseSampleFields(const std::vector<std::string>& fields
+          );
+      15  
+
+● Write(src/csv.cpp)
+  ⎿  Added 5 lines, removed 30 lines
+      18    }
+      19  }
+      20  
+      21 -// Throws if `field` isn't entirely a valid number.            
+      22 -double ParseDouble(const std::string& field, const std::string&
+         - column_name) {                                                
+      23 -  std::size_t chars_consumed = 0;                              
+      24 -  double value = 0.0;                                          
+      25 -  try {                                                        
+      26 -    value = std::stod(field, &chars_consumed);                 
+      27 -  } catch (const std::exception&) {                            
+      28 -    throw std::runtime_error("invalid " + column_name + " value
+         -: '" + field + "'");                                           
+      29 -  }                                                            
+      30 -  if (chars_consumed != field.size()) {                        
+      31 -    throw std::runtime_error("invalid " + column_name + " value
+         -: '" + field + "'");                                           
+      32 -  }                                                            
+      33 -  return value;                                                
+      34 -}                                                              
+      35 -                                                               
+      21  }  // namespace
+      22  
+      23  std::vector<std::string> SplitCsvLine(const std::string& line) 
+          {
+     ...
+      35    return fields;
+      36  }
+      37  
+      53 -bool IsValidHeader(const std::vector<std::string>& fields) {   
+      54 -  static const std::vector<std::string> kExpectedHeader = {    
+      55 -      "sample_id",  "depth_m",       "api_gravity",            
+      56 -      "sulfur_pct", "density_g_cm3", "location"};              
+      57 -  return fields == kExpectedHeader;                            
+      58 -}                                                              
+      59 -                                                               
+      38  Sample ParseSampleFields(const std::vector<std::string>& fields
+          ) {
+      61 -  constexpr std::size_t kFieldCount = 6;                       
+      62 -  if (fields.size() != kFieldCount) {                          
+      63 -    throw std::runtime_error("expected 6 fields, got " + std::t
+         -o_string(fields.size()));                                      
+      64 -  }                                                            
+      39 +  ValidateFieldCount(fields);                                  
+      40  
+      41    Sample sample;
+      42    sample.sample_id = fields[0];
+      68 -  sample.depth_m = ParseDouble(fields[1], "depth_m");          
+      69 -  sample.api_gravity = ParseDouble(fields[2], "api_gravity");  
+      70 -  sample.sulfur_pct = ParseDouble(fields[3], "sulfur_pct");    
+      71 -  sample.density_g_cm3 = ParseDouble(fields[4], "density_g_cm3"
+         -);                                                             
+      43 +  sample.depth_m = ValidateNumericField(fields[1], "depth_m"); 
+      44 +  sample.api_gravity = ValidateNumericField(fields[2], "api_gra
+         +vity");                                                        
+      45 +  sample.sulfur_pct = ValidateNumericField(fields[3], "sulfur_p
+         +ct");                                                          
+      46 +  sample.density_g_cm3 = ValidateNumericField(fields[4], "densi
+         +ty_g_cm3");                                                    
+      47    sample.location = fields[5];
+      48    ValidateSample(sample);
+      49    return sample;
+
+● Now moving IsValidHeaderTest out of csv_test.cpp and trimming the redundant
+  ParseSampleFieldsTest cases to thin wiring checks.
+
+● Update(tests/csv_test.cpp)
+  ⎿  Removed 17 lines
+      38    EXPECT_EQ(SplitCsvLine("a"), (std::vector<std::string>{"a"}))
+          ;
+      39  }
+      40  
+      41 -TEST(IsValidHeaderTest, AcceptsExpectedHeader) {               
+      42 -  const std::vector<std::string> header = {"sample_id",     "de
+         -pth_m",  "api_gravity",                                        
+      43 -                                            "sulfur_pct",    "d
+         -ensity_g_cm3", "location"};                                    
+      44 -  EXPECT_TRUE(IsValidHeader(header));                          
+      45 -}                                                              
+      46 -                                                               
+      47 -TEST(IsValidHeaderTest, RejectsWrongOrder) {                   
+      48 -  const std::vector<std::string> header = {"depth_m",       "sa
+         -mple_id", "api_gravity",                                       
+      49 -                                            "sulfur_pct",    "d
+         -ensity_g_cm3", "location"};                                    
+      50 -  EXPECT_FALSE(IsValidHeader(header));                         
+      51 -}                                                              
+      52 -                                                               
+      53 -TEST(IsValidHeaderTest, RejectsWrongColumnCount) {             
+      54 -  const std::vector<std::string> header = {"sample_id", "depth_
+         -m"};                                                           
+      55 -  EXPECT_FALSE(IsValidHeader(header));                         
+      56 -}                                                              
+      57 -                                                               
+      41  TEST(ParseSampleFieldsTest, ParsesValidRow) {
+      42    const Sample sample = ParseSampleFields({"S001", "1200", "29.
+          8", "1.10", "0.878", "ALFA"});
+      43  
+
+● Update(tests/csv_test.cpp)
+  ⎿  Added 6 lines, removed 8 lines
+      54  }
+      55  
+      56  TEST(ParseSampleFieldsTest, ThrowsOnInvalidNumericField) {
+      57 +  // Exhaustive numeric-validity coverage lives in validation_t
+         +est.cpp;                                                       
+      58 +  // this just checks wiring.                                  
+      59    EXPECT_THROW(ParseSampleFields({"S001", "1200", "not-a-number
+          ", "1.10", "0.878", "ALFA"}),
+      60                 std::runtime_error);
+      61  }
+      62  
+      61 -TEST(ParseSampleFieldsTest, ThrowsOnNumericFieldWithTrailingGar
+         -bage) {                                                        
+      62 -  EXPECT_THROW(ParseSampleFields({"S001", "1200", "29.8x", "1.1
+         -0", "0.878", "ALFA"}),                                         
+      63 +TEST(ParseSampleFieldsTest, ThrowsOnInvalidSampleValue) {      
+      64 +  // Sample-level rule coverage lives in validation_test.cpp; t
+         +his just                                                       
+      65 +  // checks wiring.                                            
+      66 +  EXPECT_THROW(ParseSampleFields({"S001", "1200", "29.8", "1.10
+         +", "0.878", ""}),                                              
+      67                 std::runtime_error);
+      68  }
+      69  
+      66 -TEST(ParseSampleFieldsTest, RejectsNonFiniteValue) {           
+      67 -  // Per-field coverage lives in validation_test.cpp; this just
+         - checks wiring.                                                
+      68 -  EXPECT_THROW(ParseSampleFields({"S001", "1200", "inf", "1.10"
+         -, "0.878", "ALFA"}),                                           
+      69 -               std::runtime_error);                            
+      70 -}                                                              
+      71 -                                                               
+      70  TEST_F(ReadCsvTest, ParsesAllRows) {
+      71    WriteFile(path_,
+      72              "sample_id,depth_m,api_gravity,sulfur_pct,density_g
+          _cm3,location\n"
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(tests/csv_test.cpp)
+  ⎿  Added 2 lines, removed 4 lines
+      54  }
+      55  
+      56  TEST(ParseSampleFieldsTest, ThrowsOnInvalidNumericField) {
+      57 -  // Exhaustive numeric-validity coverage lives in validation_t
+         -est.cpp;                                                       
+      58 -  // this just checks wiring.                                  
+      57 +  // Exhaustive coverage lives in validation_test.cpp; this che
+         +cks wiring.                                                    
+      58    EXPECT_THROW(ParseSampleFields({"S001", "1200", "not-a-number
+          ", "1.10", "0.878", "ALFA"}),
+      59                 std::runtime_error);
+      60  }
+      61  
+      62  TEST(ParseSampleFieldsTest, ThrowsOnInvalidSampleValue) {
+      64 -  // Sample-level rule coverage lives in validation_test.cpp; t
+         -his just                                                       
+      65 -  // checks wiring.                                            
+      63 +  // Exhaustive coverage lives in validation_test.cpp; this che
+         +cks wiring.                                                    
+      64    EXPECT_THROW(ParseSampleFields({"S001", "1200", "29.8", "1.10
+          ", "0.878", ""}),
+      65                 std::runtime_error);
+      66  }
+
+● Now expanding validation_test.cpp with the moved header tests plus the new
+  field-count, numeric-conversion, depth, and location coverage.
+
+● Write(tests/validation_test.cpp)
+  ⎿  Added 76 lines
+      2  
+      3  #include <limits>
+      4  #include <stdexcept>
+      5 +#include <string>                                               
+      6 +#include <vector>                                               
+      7  
+      8  #include <gtest/gtest.h>
+      9  
+     ...
+      16    return Sample{"S001", 1200.0, 29.8, 1.10, 0.878, "ALFA"};
+      17  }
+      18  
+      19 +TEST(IsValidHeaderTest, AcceptsExpectedHeader) {               
+      20 +  const std::vector<std::string> header = {"sample_id",  "depth
+         +_m",       "api_gravity",                                      
+      21 +                                            "sulfur_pct", "dens
+         +ity_g_cm3", "location"};                                       
+      22 +  EXPECT_TRUE(IsValidHeader(header));                          
+      23 +}                                                              
+      24 +                                                               
+      25 +TEST(IsValidHeaderTest, RejectsWrongOrder) {                   
+      26 +  const std::vector<std::string> header = {"depth_m",    "sampl
+         +e_id",     "api_gravity",                                      
+      27 +                                            "sulfur_pct", "dens
+         +ity_g_cm3", "location"};                                       
+      28 +  EXPECT_FALSE(IsValidHeader(header));                         
+      29 +}                                                              
+      30 +                                                               
+      31 +TEST(IsValidHeaderTest, RejectsWrongColumnCount) {             
+      32 +  const std::vector<std::string> header = {"sample_id", "depth_
+         +m"};                                                           
+      33 +  EXPECT_FALSE(IsValidHeader(header));                         
+      34 +}                                                              
+      35 +                                                               
+      36 +TEST(ValidateFieldCountTest, AcceptsSixFields) {               
+      37 +  EXPECT_NO_THROW(ValidateFieldCount({"a", "b", "c", "d", "e", 
+         +"f"}));                                                        
+      38 +}                                                              
+      39 +                                                               
+      40 +TEST(ValidateFieldCountTest, ThrowsOnTooFewFields) {           
+      41 +  EXPECT_THROW(ValidateFieldCount({"a", "b"}), std::runtime_err
+         +or);                                                           
+      42 +}                                                              
+      43 +                                                               
+      44 +TEST(ValidateFieldCountTest, ThrowsOnTooManyFields) {          
+      45 +  EXPECT_THROW(ValidateFieldCount({"a", "b", "c", "d", "e", "f"
+         +, "g"}), std::runtime_error);                                  
+      46 +}                                                              
+      47 +                                                               
+      48 +TEST(ValidateNumericFieldTest, ParsesValidNumber) {            
+      49 +  EXPECT_DOUBLE_EQ(ValidateNumericField("29.8", "api_gravity"),
+         + 29.8);                                                        
+      50 +}                                                              
+      51 +                                                               
+      52 +TEST(ValidateNumericFieldTest, ThrowsOnNonNumericText) {       
+      53 +  EXPECT_THROW(ValidateNumericField("not-a-number", "api_gravit
+         +y"), std::runtime_error);                                      
+      54 +}                                                              
+      55 +                                                               
+      56 +TEST(ValidateNumericFieldTest, ThrowsOnTrailingGarbage) {      
+      57 +  EXPECT_THROW(ValidateNumericField("29.8x", "api_gravity"), st
+         +d::runtime_error);                                             
+      58 +}                                                              
+      59 +                                                               
+      60 +TEST(ValidateNumericFieldTest, ThrowsOnInfinity) {             
+      61 +  EXPECT_THROW(ValidateNumericField("inf", "api_gravity"), std:
+         +:runtime_error);                                               
+      62 +  EXPECT_THROW(ValidateNumericField("-inf", "api_gravity"), std
+         +::runtime_error);                                              
+      63 +}                                                              
+      64 +                                                               
+      65 +TEST(ValidateNumericFieldTest, ThrowsOnNaN) {                  
+      66 +  EXPECT_THROW(ValidateNumericField("nan", "api_gravity"), std:
+         +:runtime_error);                                               
+      67 +}                                                              
+      68 +                                                               
+      69  TEST(ValidateSampleTest, AcceptsValidSample) {
+      70    EXPECT_NO_THROW(ValidateSample(ValidSample()));
+      71  }
+     ...
+       94    EXPECT_THROW(ValidateSample(sample), std::runtime_error);
+       95  }
+       96  
+       97 +TEST(ValidateSampleTest, RejectsNegativeDepth) {              
+       98 +  Sample sample = ValidSample();                              
+       99 +  sample.depth_m = -1.0;                                      
+      100 +  EXPECT_THROW(ValidateSample(sample), std::runtime_error);   
+      101 +}                                                             
+      102 +                                                              
+      103 +TEST(ValidateSampleTest, RejectsFractionalDepth) {            
+      104 +  Sample sample = ValidSample();                              
+      105 +  sample.depth_m = 1200.5;                                    
+      106 +  EXPECT_THROW(ValidateSample(sample), std::runtime_error);   
+      107 +}                                                             
+      108 +                                                              
+      109 +TEST(ValidateSampleTest, AcceptsZeroDepth) {                  
+      110 +  Sample sample = ValidSample();                              
+      111 +  sample.depth_m = 0.0;                                       
+      112 +  EXPECT_NO_THROW(ValidateSample(sample));                    
+      113 +}                                                             
+      114 +                                                              
+      115 +TEST(ValidateSampleTest, RejectsEmptyLocation) {              
+      116 +  Sample sample = ValidSample();                              
+      117 +  sample.location = "";                                       
+      118 +  EXPECT_THROW(ValidateSample(sample), std::runtime_error);   
+      119 +}                                                             
+      120 +                                                              
+      121  }  // namespace
+      122  }  // namespace petrocli
+
+● Now rebuilding and running the full suite.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Builds clean. Running tests.
+  Made 2 scratchpad edits +34, ran 2 shell commands (ctrl+o to expand)
+
+● All 20 rows of the real sample CSV still parse correctly. Summary of the
+  changes:
+
+  validation.h/.cpp now owns all input-validation rules:
+  - IsValidHeader — moved as-is (exact header match)
+  - ValidateFieldCount — extracted from ParseSampleFields (exactly six columns)
+  - ValidateNumericField — absorbed the old ParseDouble: does the conversion and
+    validates it (clean, fully-consumed, finite)
+  - ValidateSample — extended with two new rules: depth_m must be a non-negative
+    integer, location must be non-empty (kept the existing finite checks too,
+    so it stays a complete, self-sufficient check on any Sample regardless of
+    how it was built)
+
+  csv.h/.cpp is now purely mechanical: SplitCsvLine (tokenize),
+  ParseSampleFields (orchestrates the validation calls and builds the struct),
+  ReadCsv (file I/O, line tracking, error-context wrapping). No validation logic
+  of its own left.
+
+  Tests: validation_test.cpp now has exhaustive per-rule coverage (34 tests
+  total, up from 23). csv_test.cpp keeps the parsing-mechanics tests
+  (SplitCsvLine, ReadCsv orchestration) plus thin wiring tests confirming
+  ParseSampleFields actually calls into
+  ValidateFieldCount/ValidateNumericField/ValidateSample, each commented to
+  point at where the real coverage lives.
+
+  Build is green, all 34 tests pass, and the real 20-row sample CSV still parses
+  end-to-end. Nothing committed yet.
+
+✻ Churned for 4m 40s · done 3:26 PM
+
+❯ commit this as validation module. commit the claude.md changes on a separated 
+  commit                                                                        
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Committing the validation module first.
+
+  Committed ae5b01e, ran 1 shell command (ctrl+o to expand)
+
+● Now the CLAUDE.md structure update, in its own commit.
+
+  Committed b669e07 (ctrl+o to expand)
+
+● Two commits made:
+
+  - ae5b01e — validation: extract CSV input validation into its own module
+  - b669e07 — docs: update Project Structure for the validation module
+
+  Working tree is clean.
+
+✻ Sautéed for 32s · done 3:29 PM
+
+❯ build it and run the tests                                                    
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Build succeeded, all 34 tests pass.
+
+✻ Sautéed for 10s · done 3:32 PM
+
+※ recap: Petrocli's CSV reading and validation are built, tested (34 passing), and committed with docs updated; the validation module was just extracted from csv.cpp for cleaner input checks. Next: continue with cli.cpp/commands.cpp implementation, which are still stubs.
+
+❯ in the claude md, remove the Signed-off-by: João Paulo Borges Lemes           
+  <jpblemes@gmail.com>. it should use the information from the gitconfig to     
+  sign instead of using it hardcoded.                                           
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      109  - Subject line: `subsystem: summary` in imperative mood (e.g. 
+           "fix", not "fixed" or "fixes").
+      110  - Body: explain *why* the change was made, not what the diff a
+           lready shows.
+      111  - Wrap both subject and body at 72 characters.
+      112 -- End with a `Signed-off-by:` trailer.                        
+      112 +- End with a `Signed-off-by:` trailer using `git config user.n
+          +ame`/`user.email` (e.g. via `git commit -s`), never a hardcode
+          +d name or email.                                              
+      113  - No AI attribution trailers or co-author lines unless explici
+           tly requested.
+      114  
+      115  Examples:
+
+● Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      122  empty token. This caused row counts to silently mismatch the
+      123  header on CSVs with trailing commas.
+      124  
+      125 -Signed-off-by: João Paulo Borges Lemes <jpblemes@gmail.com>   
+      125 +Signed-off-by: Full Name <email@example.com>                  
+      126  ```
+      127  
+      128  ```
+
+● Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      132  processing instead of only printing to stdout. This keeps the
+      133  default behavior unchanged while enabling scripted use.
+      134  
+      135 -Signed-off-by: João Paulo Borges Lemes <jpblemes@gmail.com>   
+      135 +Signed-off-by: Full Name <email@example.com>                  
+      136  ```
+      137  
+      138  ## Pull Requests
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● All hardcoded references are gone. Updated CLAUDE.md's Commit Format section:
+
+  - The Signed-off-by: bullet now says to derive it from git config 
+    user.name/user.email (e.g. via git commit -s), never a hardcoded name/email.
+  - Both examples now show a generic Signed-off-by: Full Name 
+    <email@example.com> placeholder instead of your literal name/email.
+
+  Note this only changes the doc — going forward I'll pull the sign-off from git
+  config user.name/user.email at commit time rather than reusing the fixed line
+  I'd been using.
+
+✻ Crunched for 25s · done 3:53 PM
+
+❯ commit this change                                                            
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Using git commit -s so the trailer is pulled from git config rather than
+  hardcoded, per the rule just added.
+
+  Committed 20e0c0c (ctrl+o to expand)
+
+● Committed as 20e0c0c, signed off via git commit -s (pulled from git config 
+  user.name/user.email) instead of a hardcoded line.
+
+✻ Churned for 13s · done 3:54 PM
+
+※ recap: Building petrocli, a C++17 CLI tool, incrementally with CLAUDE.md guiding structure, style, and commit conventions; CSV parsing and validation are implemented and committed. Next: implement the CLI argument parser (cli.cpp) or another stubbed piece, as you direct.
+
+❯ implement the check command using the existing csv parsing and validation     
+  code, support the usage petrocli check --input <path>, print a clear success  
+  message when the file is valid and send validation errors to stderr with a    
+  nonzero exit code                                                             
+
+● Implementing the check command: petrocli check --input <path> reads and
+  validates the CSV via the existing ReadCsv, prints a success message on
+  stdout, and any parsing/validation failure propagates as an exception that
+  main catches, printing to stderr with a non-zero exit code.
+
+  Read 6 files (ctrl+o to expand)
+
+● Now writing cli.h/cli.cpp.
+
+● Write(include/petrocli/cli.h)
+  ⎿  Added 15 lines, removed 4 lines
+       1  #pragma once
+       2  
+       3 +#include <string>                                              
+       4 +#include <vector>                                              
+       5 +                                                               
+       6  namespace petrocli {
+       7  
+       8 +enum class Command {                                           
+       9 +  kUnknown,                                                    
+      10 +  kCheck,                                                      
+      11 +};                                                             
+      12 +                                                               
+      13  /** Parsed command-line arguments. */
+       6 -struct CliOptions {};                                          
+      14 +struct CliOptions {                                            
+      15 +  Command command = Command::kUnknown;                         
+      16 +  std::string input_path;                                      
+      17 +};                                                             
+      18  
+       8 -/** Parses command-line arguments into a CliOptions. */        
+       9 -// TODO: implement argument parsing.                           
+      10 -CliOptions ParseArgs(int argc, char** argv);                   
+      19 +/** Parses `args` (excluding the program name); throws         
+      20 + *  std::runtime_error on invalid usage. */                    
+      21 +CliOptions ParseArgs(const std::vector<std::string>& args);    
+      22  
+      23  }  // namespace petrocli
+● Write(src/cli.cpp)
+  ⎿  Added 31 lines, removed 4 lines
+       1  #include "petrocli/cli.h"
+       2  
+       3 +#include <cstddef>                                             
+       4 +#include <stdexcept>                                           
+       5 +#include <string>                                              
+       6 +#include <vector>                                              
+       7 +                                                               
+       8  namespace petrocli {
+       9  
+       5 -CliOptions ParseArgs(int argc, char** argv) {                  
+       6 -  (void)argc;                                                  
+       7 -  (void)argv;                                                  
+       8 -  return CliOptions{};                                         
+      10 +CliOptions ParseArgs(const std::vector<std::string>& args) {   
+      11 +  if (args.empty()) {                                          
+      12 +    throw std::runtime_error("usage: petrocli check --input <pa
+         +th>");                                                         
+      13 +  }                                                            
+      14 +  if (args[0] != "check") {                                    
+      15 +    throw std::runtime_error("unknown command: '" + args[0] + "
+         +'");                                                           
+      16 +  }                                                            
+      17 +                                                               
+      18 +  CliOptions options;                                          
+      19 +  options.command = Command::kCheck;                           
+      20 +                                                               
+      21 +  for (std::size_t i = 1; i < args.size(); ++i) {              
+      22 +    if (args[i] != "--input") {                                
+      23 +      throw std::runtime_error("unknown argument: '" + args[i] 
+         ++ "'");                                                        
+      24 +    }                                                          
+      25 +    if (i + 1 >= args.size()) {                                
+      26 +      throw std::runtime_error("--input requires a path argumen
+         +t");                                                           
+      27 +    }                                                          
+      28 +    options.input_path = args[++i];                            
+      29 +  }                                                            
+      30 +                                                               
+      31 +  if (options.input_path.empty()) {                            
+      32 +    throw std::runtime_error("usage: petrocli check --input <pa
+         +th>");                                                         
+      33 +  }                                                            
+      34 +                                                               
+      35 +  return options;                                              
+      36  }
+      37  
+      38  }  // namespace petrocli
+
+● Now commands.h/commands.cpp.
+
+● Write(include/petrocli/commands.h)
+  ⎿  Added 5 lines, removed 3 lines
+       1  #pragma once
+       2  
+       3 +#include <ostream>                                             
+       4 +                                                               
+       5  #include "petrocli/cli.h"
+       6  
+       7  namespace petrocli {
+       8  
+       7 -/** Runs the command selected by `options`; returns the exit co
+         -de. */                                                         
+       8 -// TODO: implement command dispatch.                           
+       9 -int RunCommand(const CliOptions& options);                     
+       9 +/** Runs the command selected by `options`, writing output to `
+         +out`;                                                          
+      10 + *  returns the exit code. Throws std::runtime_error on failure
+         +. */                                                           
+      11 +int RunCommand(const CliOptions& options, std::ostream& out);  
+      12  
+      13  }  // namespace petrocli
+
+● Write(src/commands.cpp)
+  ⎿  Added 24 lines, removed 2 lines
+       1  #include "petrocli/commands.h"
+       2  
+       3 +#include <ostream>                                             
+       4 +#include <stdexcept>                                           
+       5 +#include <string>                                              
+       6 +#include <vector>                                              
+       7 +                                                               
+       8 +#include "petrocli/csv.h"                                      
+       9 +                                                               
+      10  namespace petrocli {
+      11  
+       5 -int RunCommand(const CliOptions& options) {                    
+       6 -  (void)options;                                               
+      12 +namespace {                                                    
+      13 +                                                               
+      14 +int RunCheck(const std::string& input_path, std::ostream& out) 
+         +{                                                              
+      15 +  const std::vector<Sample> samples = ReadCsv(input_path);     
+      16 +  out << "valid: " << input_path << " (" << samples.size() << "
+         + samples)\n";                                                  
+      17    return 0;
+      18  }
+      19  
+      20 +}  // namespace                                                
+      21 +                                                               
+      22 +int RunCommand(const CliOptions& options, std::ostream& out) { 
+      23 +  switch (options.command) {                                   
+      24 +    case Command::kCheck:                                      
+      25 +      return RunCheck(options.input_path, out);                
+      26 +    case Command::kUnknown:                                    
+      27 +      break;                                                   
+      28 +  }                                                            
+      29 +  throw std::runtime_error("no command specified");            
+      30 +}                                                              
+      31 +                                                               
+      32  }  // namespace petrocli
+
+● Now main.cpp — a single try/catch at the top level, so both usage errors and
+  validation errors get the same stderr + non-zero exit code treatment.
+
+● Write(src/main.cpp)
+  ⎿  Added 14 lines, removed 2 lines
+       1 +#include <cstdlib>                                             
+       2 +#include <exception>                                           
+       3 +#include <iostream>                                            
+       4 +#include <string>                                              
+       5 +#include <vector>                                              
+       6 +                                                               
+       7  #include "petrocli/cli.h"
+       8  #include "petrocli/commands.h"
+       9  
+      10  int main(int argc, char** argv) {
+       5 -  const petrocli::CliOptions options = petrocli::ParseArgs(argc
+         -, argv);                                                       
+       6 -  return petrocli::RunCommand(options);                        
+      11 +  try {                                                        
+      12 +    const std::vector<std::string> args(argv + 1, argv + argc);
+      13 +    const petrocli::CliOptions options = petrocli::ParseArgs(ar
+         +gs);                                                           
+      14 +    return petrocli::RunCommand(options, std::cout);           
+      15 +  } catch (const std::exception& e) {                          
+      16 +    std::cerr << "error: " << e.what() << "\n";                
+      17 +    return EXIT_FAILURE;                                       
+      18 +  }                                                            
+      19  }
+
+● Now the tests: cli_test.cpp for ParseArgs, commands_test.cpp for RunCommand.
+
+● Write(tests/cli_test.cpp)
+  ⎿  Wrote 37 lines to tests/cli_test.cpp
+       1 #include "petrocli/cli.h"
+       2 
+       3 #include <stdexcept>
+       4 
+       5 #include <gtest/gtest.h>
+       6 
+       7 namespace petrocli {
+       8 namespace {
+       9 
+      10 TEST(ParseArgsTest, ParsesCheckWithInput) {
+     … +30 lines (ctrl+o to expand)
+
+● Write(tests/commands_test.cpp)
+  ⎿  Wrote 63 lines to tests/commands_test.cpp
+      1 #include "petrocli/commands.h"
+      2 
+      3 #include <filesystem>
+      4 #include <fstream>
+      5 #include <sstream>
+      6 #include <stdexcept>
+      7 #include <string>
+      8 
+      9 #include <gtest/gtest.h>
+     … +57 lines (ctrl+o to expand)
+
+● Now wiring the new test files into CMake and updating CLAUDE.md's tree.
+
+● Update(tests/CMakeLists.txt)
+  ⎿  Added 2 lines
+       8  FetchContent_MakeAvailable(googletest)
+       9  
+      10  add_executable(petrocli_tests
+      11 +    cli_test.cpp                                               
+      12 +    commands_test.cpp                                          
+      13      csv_test.cpp
+      14      validation_test.cpp
+      15  )
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(CLAUDE.md)
+  ⎿  Added 2 lines
+      32      reference.py
+      33    tests/                   # GoogleTest suite
+      34      CMakeLists.txt
+      35 +    cli_test.cpp                                               
+      36 +    commands_test.cpp                                          
+      37      csv_test.cpp
+      38      validation_test.cpp
+      39    README.md
+
+● Now building and running the full test suite.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Builds clean. Running the full test suite.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All 43 tests pass. Now let's manually verify the actual binary's end-to-end
+  behavior — stdout on success, stderr + exit code on failure.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All behaviors confirmed exactly as required:
+
+  - Success: clear message to stdout (valid: <path> (N samples)), exit code 0,
+    nothing on stderr.
+  - Validation failure: nothing on stdout, clear error on stderr (with the
+    path:line: context from ReadCsv), exit code 1.
+  - Missing file / bad usage: same stderr + non-zero exit pattern, uniformly
+    handled by main's single catch block.
+
+  Summary of what was implemented:
+
+  - cli.h/cli.cpp: Command enum (kUnknown, kCheck) and CliOptions{command, 
+    input_path}. ParseArgs(const std::vector<std::string>&) parses check --input
+    <path>, throwing std::runtime_error on any usage error (no args, unknown
+    command, missing/valueless --input, unknown flag).
+  - commands.h/commands.cpp: RunCommand(options, ostream&) dispatches to
+    RunCheck, which calls the existing ReadCsv and writes the success message to
+    the given stream — letting any validation exception propagate rather than
+    swallowing it. Output is injected via ostream& so it's testable without
+    stdout capture tricks.
+  - main.cpp: builds the args vector, calls ParseArgs → RunCommand(options, 
+    std::cout), with one top-level try/catch that prints error: <what> to stderr
+    and returns EXIT_FAILURE for any failure (usage or validation) — that's the
+    single place "fail loud" is enforced.
+  - Tests: cli_test.cpp (6 cases covering valid parse + every usage error),
+    commands_test.cpp (success message + sample count, propagation of validation
+    errors, and the unreachable-but-defensive "no command" case).
+  - CLAUDE.md: Project Structure tree updated with
+    cli_test.cpp/commands_test.cpp.
+
+  Nothing committed yet.
+
+✻ Worked for 2m 35s · done 4:29 PM
+
+❯ build and run tests                                                           
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Build succeeded, all 43 tests pass.
+
+✻ Worked for 11s · done 4:33 PM
+
+※ recap: We've been building petrocli, a C++17 CLI tool that reads and validates oil sample CSVs. The check command is implemented and all 43 tests pass, uncommitted; next step is to commit this work.
+
+❯ commit this as the check command                                              
+
+  Committed 03312cd, ran 2 shell commands (ctrl+o to expand)
+
+● Now the CLAUDE.md structure update, in its own commit.
+
+  Committed fa54772 (ctrl+o to expand)
+
+● Two commits made:
+
+  - 03312cd — cli: implement the check command
+  - fa54772 — docs: add cli_test.cpp and commands_test.cpp to Project Structure
+
+  Working tree is clean. Note: your local master is now 2 commits ahead of
+  origin/master — I haven't pushed, let me know if you'd like me to.
+
+✻ Churned for 26s · done 4:38 PM
+❯ reword the commits that are exclusively for claude.md. it has to contain that 
+  its a change on claude.md                                                     
+
+  Ran 5 shell commands (ctrl+o to expand)
+
+● Before I touch anything: git log origin/master shows b669e07 and 20e0c0c are
+  already pushed to origin/master. Rewording them means rewriting pushed
+  history, which needs a force-push — that's exactly what CLAUDE.md's own
+  "Things Not To Do" section forbids ("never rewrite shared history"). Only
+  fa54772 (the current HEAD) is still local-only.
+
+● User answered Claude's questions:
+  ⎿  · b669e07 and 20e0c0c are already pushed to origin/master. Rewording them 
+     means rewriting pushed history and force-pushing. How do you want to handle
+     those two? → Leave them as-is (recommended)
+
+● Just rewording fa54772 then, since it's HEAD and unpushed — simple amend.
+
+  Amended commit 0d638c6 (ctrl+o to expand)
+
+● Done. fa54772 → 0d638c6: docs: add cli_test.cpp and commands_test.cpp to 
+  CLAUDE.md, now explicitly naming CLAUDE.md in the subject.
+
+  b669e07 and 20e0c0c are left untouched since they're already pushed to
+  origin/master, and 8fb7614 (docs: add CLAUDE.md project conventions) already
+  named CLAUDE.md so it didn't need a reword.
+
+✻ Cogitated for 1m 14s · done 4:40 PM
+
+❯ this commit message is too big: 03312cd45ce9a54eac637442b02cc4b6e1283c11      
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Rewording. 03312cd isn't HEAD (there's 0d638c6 on top of it, also
+  local-only/unpushed), so I'll do the detached-checkout replay again — safe
+  since nothing here is pushed.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Confirmed both 03312cd and 0d638c6 are still unpushed local commits.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● That's expected — checking out 20e0c0c reverted those files to their state at
+  that point in history, not a stray edit. Continuing the replay.
+
+  Amended commit ae8159e, cherry-picked ad6ce05 (ctrl+o to expand)
+
+● Now replaying 0d638c6 on top, then fast-forwarding master.
+
+  Cherry-picked 01e8deb, ran 1 shell command (ctrl+o to expand)
+
+● Rebuilding to confirm nothing broke.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Reworded: 03312cd → ae8159e, message shortened from two paragraphs to one
+  tighter one, same content. 0d638c6 replayed unchanged as 01e8deb. Both were
+  unpushed, so no force-push needed. Build and all 43 tests still pass.
+
+✻ Cogitated for 1m 16s · done 4:43 PM
+
+※ recap: You've been building petrocli, a C++ CSV validation CLI, with commits covering CSV parsing, validation, and the check command. Recently you reworded some local git commit messages for clarity; next step is deciding whether to push these commits to origin/master.
+
+❯ it's necessary to add the command line option on app execution                
+
+  Read 1 file (ctrl+o to expand)
+
+● User declined to answer questions
+  ⎿  · "Add the command line option on app execution" is ambiguous to me. What 
+     do you need? (Document the check usage (Recommended) / Add a new CLI flag /
+     Something else)
+
+✻ Worked for 16s · done 7:50 PM
+
+※ recap: Building petrocli, a C++17 CSV validation CLI, incrementally with CLAUDE.md-driven conventions. Just finished implementing and testing the `check` command plus reworded its commit messages; next step is deciding whether to push the two local commits to origin/master.
+
+❯ /export                                                                       
+  ⎿  Export cancelled
