@@ -36,6 +36,9 @@ petrocli/
     commands_test.cpp
     csv_test.cpp
     validation_test.cpp
+    resources/             # fixture files for tests
+      petro_samples_linux.csv
+      petro_samples_windows.csv
   README.md
   AI_LOG.md                # maintained manually via /export
 ```
