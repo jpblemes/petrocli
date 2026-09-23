@@ -38,23 +38,6 @@ TEST(SplitCsvLineTest, SingleFieldWithNoCommas) {
   EXPECT_EQ(SplitCsvLine("a"), (std::vector<std::string>{"a"}));
 }
 
-TEST(IsValidHeaderTest, AcceptsExpectedHeader) {
-  const std::vector<std::string> header = {"sample_id",     "depth_m",  "api_gravity",
-                                            "sulfur_pct",    "density_g_cm3", "location"};
-  EXPECT_TRUE(IsValidHeader(header));
-}
-
-TEST(IsValidHeaderTest, RejectsWrongOrder) {
-  const std::vector<std::string> header = {"depth_m",       "sample_id", "api_gravity",
-                                            "sulfur_pct",    "density_g_cm3", "location"};
-  EXPECT_FALSE(IsValidHeader(header));
-}
-
-TEST(IsValidHeaderTest, RejectsWrongColumnCount) {
-  const std::vector<std::string> header = {"sample_id", "depth_m"};
-  EXPECT_FALSE(IsValidHeader(header));
-}
-
 TEST(ParseSampleFieldsTest, ParsesValidRow) {
   const Sample sample = ParseSampleFields({"S001", "1200", "29.8", "1.10", "0.878", "ALFA"});
 
@@ -71,21 +54,14 @@ TEST(ParseSampleFieldsTest, ThrowsOnWrongFieldCount) {
 }
 
 TEST(ParseSampleFieldsTest, ThrowsOnInvalidNumericField) {
+  // Exhaustive coverage lives in validation_test.cpp; this checks wiring.
   EXPECT_THROW(ParseSampleFields({"S001", "1200", "not-a-number", "1.10", "0.878", "ALFA"}),
                std::runtime_error);
 }
 
-TEST(ParseSampleFieldsTest, ThrowsOnNumericFieldWithTrailingGarbage) {
-  EXPECT_THROW(ParseSampleFields({"S001", "1200", "29.8x", "1.10", "0.878", "ALFA"}),
-               std::runtime_error);
-}
-
-TEST(ParseSampleFieldsTest, ThrowsOnNonFiniteNumericField) {
-  EXPECT_THROW(ParseSampleFields({"S001", "1200", "inf", "1.10", "0.878", "ALFA"}),
-               std::runtime_error);
-  EXPECT_THROW(ParseSampleFields({"S001", "1200", "-inf", "1.10", "0.878", "ALFA"}),
-               std::runtime_error);
-  EXPECT_THROW(ParseSampleFields({"S001", "1200", "nan", "1.10", "0.878", "ALFA"}),
+TEST(ParseSampleFieldsTest, ThrowsOnInvalidSampleValue) {
+  // Exhaustive coverage lives in validation_test.cpp; this checks wiring.
+  EXPECT_THROW(ParseSampleFields({"S001", "1200", "29.8", "1.10", "0.878", ""}),
                std::runtime_error);
 }
 

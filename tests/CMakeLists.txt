@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(petrocli_tests
     csv_test.cpp
+    validation_test.cpp
 )
 
 target_link_libraries(petrocli_tests PRIVATE

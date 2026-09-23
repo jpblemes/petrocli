@@ -2,6 +2,7 @@ add_library(petrocli_lib
     cli.cpp
     csv.cpp
     commands.cpp
+    validation.cpp
 )
 
 target_include_directories(petrocli_lib PUBLIC
