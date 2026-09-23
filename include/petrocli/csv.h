@@ -7,8 +7,8 @@
 
 namespace petrocli {
 
-/** Reads CSV data from `path` and returns the parsed records. Not
+/** Reads CSV data from `path` and returns the parsed samples. Not
  *  yet implemented. */
-std::vector<Record> ReadCsv(const std::string& path);
+std::vector<Sample> ReadCsv(const std::string& path);
 
 }  // namespace petrocli
