@@ -18,6 +18,15 @@ TEST(ParseArgsTest, ParsesCheckWithInput) {
   EXPECT_EQ(check_command->input_path(), "data.csv");
 }
 
+TEST(ParseArgsTest, ParsesStatsWithInput) {
+  const auto command = ParseArgs({"stats", "--input", "data.csv"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* stats_command = dynamic_cast<StatsCommand*>(command.get());
+  ASSERT_NE(stats_command, nullptr);
+  EXPECT_EQ(stats_command->input_path(), "data.csv");
+}
+
 TEST(ParseArgsTest, ThrowsOnNoArguments) {
   EXPECT_THROW(ParseArgs({}), std::runtime_error);
 }
