@@ -204,6 +204,27 @@ S004                0.450
 S005                0.550
 ```
 
+## Reference Script
+
+`tools/reference.py` is a small, independent Python reference script:
+it reads `data/data.csv` with the standard library `csv` module and
+prints the mean `api_gravity`, for cross-checking the C++ CLI's own
+calculation. It has nothing to do with petrocli itself: no shared
+code, no CLI parsing, just one computation, and it requires only the
+Python standard library.
+
+```
+python3 tools/reference.py
+```
+
+```
+mean_api_gravity=29.060000000000002
+```
+
+This matches `petrocli stats --input data/data.csv`'s `api_gravity`
+mean (`29.06`) exactly, just with more decimal digits from Python's
+default float formatting.
+
 ## Design Decisions
 
 - **Separation of concerns**:
