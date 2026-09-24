@@ -20,6 +20,7 @@ petrocli/
     csv.cpp                # CSV handling
     commands.cpp           # CLI command implementations
     filter.cpp             # sample filtering
+    rank.cpp               # sample ranking
     stats.cpp              # descriptive statistics
     validation.cpp         # sample validation
   include/petrocli/        # public headers, mirrors src/
@@ -29,6 +30,7 @@ petrocli/
     commands.h
     filter.h
     model.h                # data model
+    rank.h
     stats.h
     validation.h
   data/                    # sample/reference data
@@ -41,6 +43,7 @@ petrocli/
     commands_test.cpp
     csv_test.cpp
     filter_test.cpp
+    rank_test.cpp
     stats_test.cpp
     validation_test.cpp
     resources/             # fixture files for tests
