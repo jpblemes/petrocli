@@ -112,5 +112,54 @@ TEST(ParseArgsTest, ThrowsOnUnknownFlag) {
   EXPECT_THROW(ParseArgs({"check", "--bogus", "data.csv"}), std::runtime_error);
 }
 
+TEST(ParseArgsTest, InvalidArgumentErrorIncludesCommandUsage) {
+  try {
+    ParseArgs({"check", "--bogus", "data.csv"});
+    FAIL() << "expected ParseArgs to throw";
+  } catch (const std::runtime_error& e) {
+    EXPECT_NE(std::string(e.what()).find(CheckCommand::Usage()), std::string::npos);
+  }
+}
+
+TEST(ParseArgsTest, DashDashHelpReturnsGlobalHelp) {
+  const auto command = ParseArgs({"--help"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* print_command = dynamic_cast<PrintCommand*>(command.get());
+  ASSERT_NE(print_command, nullptr);
+  EXPECT_NE(print_command->text().find("check"), std::string::npos);
+  EXPECT_NE(print_command->text().find("stats"), std::string::npos);
+  EXPECT_NE(print_command->text().find("filter"), std::string::npos);
+  EXPECT_NE(print_command->text().find("rank"), std::string::npos);
+}
+
+TEST(ParseArgsTest, ShortDashHReturnsGlobalHelp) {
+  const auto command = ParseArgs({"-h"});
+  EXPECT_NE(dynamic_cast<PrintCommand*>(command.get()), nullptr);
+}
+
+TEST(ParseArgsTest, HelpWordReturnsGlobalHelp) {
+  const auto command = ParseArgs({"help"});
+  EXPECT_NE(dynamic_cast<PrintCommand*>(command.get()), nullptr);
+}
+
+TEST(ParseArgsTest, CommandHelpFlagReturnsThatCommandsUsage) {
+  const auto command = ParseArgs({"check", "--help"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* print_command = dynamic_cast<PrintCommand*>(command.get());
+  ASSERT_NE(print_command, nullptr);
+  EXPECT_EQ(print_command->text(), CheckCommand::Usage());
+}
+
+TEST(ParseArgsTest, CommandShortHelpFlagReturnsThatCommandsUsage) {
+  const auto command = ParseArgs({"rank", "-h"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* print_command = dynamic_cast<PrintCommand*>(command.get());
+  ASSERT_NE(print_command, nullptr);
+  EXPECT_EQ(print_command->text(), RankCommand::Usage());
+}
+
 }  // namespace
 }  // namespace petrocli

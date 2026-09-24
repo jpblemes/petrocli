@@ -16,6 +16,22 @@ void WriteFile(const std::filesystem::path& path, const std::string& content) {
   file << content;
 }
 
+TEST(PrintCommandTest, WritesTextAndReturnsZero) {
+  const PrintCommand command("hello");
+  std::ostringstream out;
+  const int exit_code = command.Execute(out);
+
+  EXPECT_EQ(exit_code, 0);
+  EXPECT_EQ(out.str(), "hello\n");
+}
+
+TEST(PrintCommandTest, DoesNotDuplicateTrailingNewline) {
+  const PrintCommand command("hello\n");
+  std::ostringstream out;
+  command.Execute(out);
+  EXPECT_EQ(out.str(), "hello\n");
+}
+
 class CheckCommandTest : public ::testing::Test {
  protected:
   void TearDown() override { std::filesystem::remove(path_); }

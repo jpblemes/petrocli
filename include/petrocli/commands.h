@@ -10,12 +10,28 @@
 
 namespace petrocli {
 
+/** Prints fixed text to `out` and returns 0. Used for --help output. */
+class PrintCommand : public Command {
+ public:
+  explicit PrintCommand(std::string text);
+
+  int Execute(std::ostream& out) const override;
+
+  const std::string& text() const { return text_; }
+
+ private:
+  std::string text_;
+};
+
 /** Validates a CSV file via ReadCsv and reports the result. */
 class CheckCommand : public Command {
  public:
-  /** Parses `args` into a CheckCommand; throws std::runtime_error
-   *  on invalid usage. */
+  /** Parses `args` into a CheckCommand, or a PrintCommand if `args`
+   *  requests --help; throws std::runtime_error on invalid usage. */
   static std::unique_ptr<Command> Parse(const std::vector<std::string>& args);
+
+  /** This command's usage line. */
+  static const char* Usage();
 
   explicit CheckCommand(std::string input_path);
 
@@ -31,9 +47,12 @@ class CheckCommand : public Command {
  *  sulfur_pct, and density_g_cm3. */
 class StatsCommand : public Command {
  public:
-  /** Parses `args` into a StatsCommand; throws std::runtime_error
-   *  on invalid usage. */
+  /** Parses `args` into a StatsCommand, or a PrintCommand if `args`
+   *  requests --help; throws std::runtime_error on invalid usage. */
   static std::unique_ptr<Command> Parse(const std::vector<std::string>& args);
+
+  /** This command's usage line. */
+  static const char* Usage();
 
   explicit StatsCommand(std::string input_path);
 
@@ -48,9 +67,13 @@ class StatsCommand : public Command {
 /** Prints, as CSV, the samples matching a location and depth range. */
 class FilterCommand : public Command {
  public:
-  /** Parses `args` into a FilterCommand; throws std::runtime_error
-   *  on invalid usage. */
+  /** Parses `args` into a FilterCommand, or a PrintCommand if
+   *  `args` requests --help; throws std::runtime_error on invalid
+   *  usage. */
   static std::unique_ptr<Command> Parse(const std::vector<std::string>& args);
+
+  /** This command's usage line. */
+  static const char* Usage();
 
   FilterCommand(std::string input_path, std::string location, double depth_min, double depth_max);
 
@@ -78,9 +101,12 @@ enum class RankBy {
  *  api_gravity or sulfur_pct. */
 class RankCommand : public Command {
  public:
-  /** Parses `args` into a RankCommand; throws std::runtime_error
-   *  on invalid usage. */
+  /** Parses `args` into a RankCommand, or a PrintCommand if `args`
+   *  requests --help; throws std::runtime_error on invalid usage. */
   static std::unique_ptr<Command> Parse(const std::vector<std::string>& args);
+
+  /** This command's usage line. */
+  static const char* Usage();
 
   RankCommand(std::string input_path, RankBy rank_by, std::size_t top);
 

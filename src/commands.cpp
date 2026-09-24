@@ -20,6 +20,15 @@ namespace petrocli {
 
 namespace {
 
+bool HasHelpFlag(const std::vector<std::string>& args) {
+  for (const std::string& arg : args) {
+    if (arg == "--help" || arg == "-h") {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Parses a single `--input <path>` flag; throws `usage` on any
 // other flag or a missing/empty path.
 std::string ParseInputPathArg(const std::vector<std::string>& args, const std::string& usage) {
@@ -27,10 +36,10 @@ std::string ParseInputPathArg(const std::vector<std::string>& args, const std::s
 
   for (std::size_t i = 0; i < args.size(); ++i) {
     if (args[i] != "--input") {
-      throw std::runtime_error("unknown argument: '" + args[i] + "'");
+      throw std::runtime_error("unknown argument: '" + args[i] + "'\n" + usage);
     }
     if (i + 1 >= args.size()) {
-      throw std::runtime_error("--input requires a path argument");
+      throw std::runtime_error("--input requires a path argument\n" + usage);
     }
     input_path = args[++i];
   }
@@ -40,6 +49,17 @@ std::string ParseInputPathArg(const std::vector<std::string>& args, const std::s
   }
 
   return input_path;
+}
+
+// Validates `value` as a numeric CLI argument; appends `usage` to
+// whatever error ValidateNumericField produces.
+double ParseNumericArg(const std::string& value, const std::string& field_name,
+                        const std::string& usage) {
+  try {
+    return ValidateNumericField(value, field_name);
+  } catch (const std::exception& e) {
+    throw std::runtime_error(std::string(e.what()) + "\n" + usage);
+  }
 }
 
 std::vector<double> ExtractColumn(const std::vector<Sample>& samples, double Sample::*field) {
@@ -72,10 +92,6 @@ void PrintStatsRow(std::ostream& out, const std::string& column, const Descripti
       << std::setw(kFieldWidth) << *stats.maximum << std::setw(kFieldWidth) << *stats.mean << "\n";
 }
 
-const char kFilterUsage[] =
-    "usage: petrocli filter --input <path> --location <location> "
-    "--depth-min <value> --depth-max <value>";
-
 constexpr int kIdWidth = 12;
 constexpr int kDepthWidth = 10;
 constexpr int kApiGravityWidth = 14;
@@ -98,8 +114,6 @@ void PrintFilterRow(std::ostream& out, const Sample& sample) {
       << sample.density_g_cm3 << std::setw(kLocationWidth) << sample.location << "\n";
 }
 
-const char kRankUsage[] = "usage: petrocli rank --input <path> --by <api|sulfur> --top <N>";
-
 RankBy ParseRankBy(const std::string& value) {
   if (value == "api") {
     return RankBy::kApiGravity;
@@ -107,13 +121,15 @@ RankBy ParseRankBy(const std::string& value) {
   if (value == "sulfur") {
     return RankBy::kSulfurPct;
   }
-  throw std::runtime_error("invalid --by value: '" + value + "', expected 'api' or 'sulfur'");
+  throw std::runtime_error("invalid --by value: '" + value + "', expected 'api' or 'sulfur'\n" +
+                            RankCommand::Usage());
 }
 
 std::size_t ParseTopArg(const std::string& value) {
-  const double parsed = ValidateNumericField(value, "--top");
+  const double parsed = ParseNumericArg(value, "--top", RankCommand::Usage());
   if (parsed <= 0.0 || parsed != std::trunc(parsed)) {
-    throw std::runtime_error("invalid --top value: must be a positive integer");
+    throw std::runtime_error(std::string("invalid --top value: must be a positive integer\n") +
+                              RankCommand::Usage());
   }
   return static_cast<std::size_t>(parsed);
 }
@@ -133,8 +149,23 @@ void PrintRankRow(std::ostream& out, const std::string& sample_id, double value)
 
 }  // namespace
 
+PrintCommand::PrintCommand(std::string text) : text_(std::move(text)) {}
+
+int PrintCommand::Execute(std::ostream& out) const {
+  out << text_;
+  if (text_.empty() || text_.back() != '\n') {
+    out << "\n";
+  }
+  return 0;
+}
+
+const char* CheckCommand::Usage() { return "usage: petrocli check --input <path>"; }
+
 std::unique_ptr<Command> CheckCommand::Parse(const std::vector<std::string>& args) {
-  return std::make_unique<CheckCommand>(ParseInputPathArg(args, "usage: petrocli check --input <path>"));
+  if (HasHelpFlag(args)) {
+    return std::make_unique<PrintCommand>(Usage());
+  }
+  return std::make_unique<CheckCommand>(ParseInputPathArg(args, Usage()));
 }
 
 CheckCommand::CheckCommand(std::string input_path) : input_path_(std::move(input_path)) {}
@@ -145,8 +176,13 @@ int CheckCommand::Execute(std::ostream& out) const {
   return 0;
 }
 
+const char* StatsCommand::Usage() { return "usage: petrocli stats --input <path>"; }
+
 std::unique_ptr<Command> StatsCommand::Parse(const std::vector<std::string>& args) {
-  return std::make_unique<StatsCommand>(ParseInputPathArg(args, "usage: petrocli stats --input <path>"));
+  if (HasHelpFlag(args)) {
+    return std::make_unique<PrintCommand>(Usage());
+  }
+  return std::make_unique<StatsCommand>(ParseInputPathArg(args, Usage()));
 }
 
 StatsCommand::StatsCommand(std::string input_path) : input_path_(std::move(input_path)) {}
@@ -163,7 +199,16 @@ int StatsCommand::Execute(std::ostream& out) const {
   return 0;
 }
 
+const char* FilterCommand::Usage() {
+  return "usage: petrocli filter --input <path> --location <location> "
+         "--depth-min <value> --depth-max <value>";
+}
+
 std::unique_ptr<Command> FilterCommand::Parse(const std::vector<std::string>& args) {
+  if (HasHelpFlag(args)) {
+    return std::make_unique<PrintCommand>(Usage());
+  }
+
   std::string input_path;
   std::string location;
   std::optional<double> depth_min;
@@ -171,7 +216,7 @@ std::unique_ptr<Command> FilterCommand::Parse(const std::vector<std::string>& ar
 
   for (std::size_t i = 0; i < args.size(); ++i) {
     if (i + 1 >= args.size()) {
-      throw std::runtime_error("'" + args[i] + "' requires a value");
+      throw std::runtime_error("'" + args[i] + "' requires a value\n" + Usage());
     }
     const std::string& flag = args[i];
     const std::string& value = args[++i];
@@ -181,16 +226,16 @@ std::unique_ptr<Command> FilterCommand::Parse(const std::vector<std::string>& ar
     } else if (flag == "--location") {
       location = value;
     } else if (flag == "--depth-min") {
-      depth_min = ValidateNumericField(value, "--depth-min");
+      depth_min = ParseNumericArg(value, "--depth-min", Usage());
     } else if (flag == "--depth-max") {
-      depth_max = ValidateNumericField(value, "--depth-max");
+      depth_max = ParseNumericArg(value, "--depth-max", Usage());
     } else {
-      throw std::runtime_error("unknown argument: '" + flag + "'");
+      throw std::runtime_error("unknown argument: '" + flag + "'\n" + Usage());
     }
   }
 
   if (input_path.empty() || location.empty() || !depth_min.has_value() || !depth_max.has_value()) {
-    throw std::runtime_error(kFilterUsage);
+    throw std::runtime_error(Usage());
   }
 
   return std::make_unique<FilterCommand>(std::move(input_path), std::move(location), *depth_min,
@@ -215,14 +260,22 @@ int FilterCommand::Execute(std::ostream& out) const {
   return 0;
 }
 
+const char* RankCommand::Usage() {
+  return "usage: petrocli rank --input <path> --by <api|sulfur> --top <N>";
+}
+
 std::unique_ptr<Command> RankCommand::Parse(const std::vector<std::string>& args) {
+  if (HasHelpFlag(args)) {
+    return std::make_unique<PrintCommand>(Usage());
+  }
+
   std::string input_path;
   std::optional<RankBy> rank_by;
   std::optional<std::size_t> top;
 
   for (std::size_t i = 0; i < args.size(); ++i) {
     if (i + 1 >= args.size()) {
-      throw std::runtime_error("'" + args[i] + "' requires a value");
+      throw std::runtime_error("'" + args[i] + "' requires a value\n" + Usage());
     }
     const std::string& flag = args[i];
     const std::string& value = args[++i];
@@ -234,12 +287,12 @@ std::unique_ptr<Command> RankCommand::Parse(const std::vector<std::string>& args
     } else if (flag == "--top") {
       top = ParseTopArg(value);
     } else {
-      throw std::runtime_error("unknown argument: '" + flag + "'");
+      throw std::runtime_error("unknown argument: '" + flag + "'\n" + Usage());
     }
   }
 
   if (input_path.empty() || !rank_by.has_value() || !top.has_value()) {
-    throw std::runtime_error(kRankUsage);
+    throw std::runtime_error(Usage());
   }
 
   return std::make_unique<RankCommand>(std::move(input_path), *rank_by, *top);
