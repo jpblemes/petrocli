@@ -12,6 +12,7 @@ add_executable(petrocli_tests
     commands_test.cpp
     csv_test.cpp
     filter_test.cpp
+    rank_test.cpp
     stats_test.cpp
     validation_test.cpp
 )

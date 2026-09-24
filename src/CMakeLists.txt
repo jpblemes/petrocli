@@ -3,6 +3,7 @@ add_library(petrocli_lib
     csv.cpp
     commands.cpp
     filter.cpp
+    rank.cpp
     stats.cpp
     validation.cpp
 )
