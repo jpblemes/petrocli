@@ -16,15 +16,18 @@ petrocli/
   src/                     # application source
     CMakeLists.txt
     main.cpp               # entry point
-    cli.cpp                # CLI argument parser
+    cli.cpp                # CLI argument parser and command dispatch
     csv.cpp                # CSV handling
-    commands.cpp           # application commands
+    commands.cpp           # CLI command implementations
+    stats.cpp              # descriptive statistics
     validation.cpp         # sample validation
   include/petrocli/        # public headers, mirrors src/
     cli.h
+    command.h              # Command interface
     csv.h
     commands.h
     model.h                # data model
+    stats.h
     validation.h
   data/                    # sample/reference data
     data.csv
@@ -35,6 +38,7 @@ petrocli/
     cli_test.cpp
     commands_test.cpp
     csv_test.cpp
+    stats_test.cpp
     validation_test.cpp
     resources/             # fixture files for tests
       petro_samples_linux.csv
