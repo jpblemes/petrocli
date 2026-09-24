@@ -14,6 +14,9 @@ A command-line application, built incrementally with C++17 and CMake.
 - [NSIS](https://nsis.sourceforge.io/) — Windows only, and only needed to
   build the `.exe` installer via `cpack -G NSIS`. Not required to build, run,
   or test petrocli itself.
+- [Valgrind](https://valgrind.org/) — Linux only, and only needed to run the
+  test suite under memory checking. Not required for a normal build, run,
+  or test.
 
 GoogleTest is fetched automatically via CMake FetchContent; no manual setup
 is needed for it.
@@ -46,6 +49,15 @@ cmake --build build --config Debug
 ```
 ctest --test-dir build --output-on-failure           # Linux
 ctest --test-dir build --output-on-failure -C Debug   # Windows
+```
+
+### Memory checking (Linux)
+
+Runs the test suite under Valgrind; fails with a non-zero exit code if
+any memory error or leak is detected.
+
+```
+valgrind --leak-check=full --error-exitcode=1 -s ./build/tests/petrocli_tests
 ```
 
 ## Package
