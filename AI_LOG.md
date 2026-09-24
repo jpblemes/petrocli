@@ -9570,3 +9570,429 @@
 ● Done. ef3a2dc → dd6f816, no mention of Ninja anywhere in the message now.
 
 ✻ Crunched for 10s · done 6:14 AM
+
+❯ /export AI_LOG.md                                                             
+  ⎿  Conversation exported to: /home/joao/Documents/petrocli/AI_LOG.md
+
+❯ add README instructions explaining how to generate the windows installer with 
+  cpack or the package target and explain how to install and uninstall          
+  petrocli                                                                      
+
+● Let's verify the package target actually works (on this Linux/single-config
+  setup) before documenting it, so the README stays accurate.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Confirmed both cpack (no -G needed — the CMakeLists.txt already picks the
+  right generator per platform) and cmake --build build --target package work
+  correctly. Cleaning up before writing the docs.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Inserting a new ## Package section between ## Test and ## Commands.
+
+● Update(README.md)
+  ⎿  Added 37 lines
+      48  ctest --test-dir build --output-on-failure -C Debug   # Windows
+      49  ```
+      50  
+      51 +## Package                                                     
+      52 +                                                               
+      53 +Requires NSIS on Windows (see Prerequisites above); on Linux th
+         +is                                                             
+      54 +produces a `.deb` instead and needs no extra tooling. Run from 
+         +the                                                            
+      55 +`build` directory configured above:                            
+      56 +                                                               
+      57 +```                                                            
+      58 +cd build                                                       
+      59 +cpack                                                          
+      60 +```                                                            
+      61 +                                                               
+      62 +or, equivalently, without leaving the top-level directory:     
+      63 +                                                               
+      64 +```                                                            
+      65 +cmake --build build --target package                  # Linux  
+      66 +cmake --build build --config Debug --target package    # Window
+         +s                                                              
+      67 +```                                                            
+      68 +                                                               
+      69 +Either way, CMake picks the right generator for the current pla
+         +tform                                                          
+      70 +automatically (DEB on Linux, NSIS on Windows), and the package 
+         +is                                                             
+      71 +written into `build/`. On Linux this is `petrocli-0.1.0-Linux.d
+         +eb`.                                                           
+      72 +                                                               
+      73 +### Install                                                    
+      74 +                                                               
+      75 +- Linux: `sudo dpkg -i build/petrocli-0.1.0-Linux.deb` installs
+         + the                                                           
+      76 +  `petrocli` binary to `/usr/bin`.                             
+      77 +- Windows: run the generated `.exe` and follow the installer; i
+         +t                                                              
+      78 +  installs to `%ProgramFiles%\petrocli` by default.            
+      79 +                                                               
+      80 +### Uninstall                                                  
+      81 +                                                               
+      82 +- Linux: `sudo apt remove petrocli` (or `sudo dpkg -r petrocli`
+         +).                                                             
+      83 +- Windows: use Settings → Apps → petrocli → Uninstall, or run  
+      84 +  `Uninstall.exe` directly from the install directory          
+      85 +  (`%ProgramFiles%\petrocli\Uninstall.exe`) — NSIS generates th
+         +is                                                             
+      86 +  uninstaller automatically.                                   
+      87 +                                                               
+      88  ## Commands
+      89  
+      90  The examples below run against the sample dataset at `data/data
+          .csv`
+
+● I won't actually run sudo dpkg -i/apt remove — that installs a real package
+  system-wide, too invasive for this sandbox without being asked. But the
+  install path is already verified (dpkg-deb --contents earlier showed
+  ./usr/bin/petrocli), and the commands themselves are completely standard
+  Debian package operations, not project-specific behavior. Let me do a final
+  read-through for consistency.
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Added a ## Package section to README.md, positioned between Test and Commands:
+
+  - Generating the installer: two equivalent ways — cd build && cpack, or cmake 
+    --build build --target package (Linux) / cmake --build build --config Debug 
+    --target package (Windows) — both verified to work on this machine
+    (Linux/DEB path), with CMake auto-selecting the right generator per platform
+    (no -G flag needed, confirmed empirically).
+  - Install: sudo dpkg -i build/petrocli-0.1.0-Linux.deb (Linux, installs to
+    /usr/bin, matching the dpkg-deb --contents output verified earlier) and
+    running the generated .exe on Windows (installs to %ProgramFiles%\petrocli,
+    per the CPACK_PACKAGE_INSTALL_DIRECTORY setting).
+  - Uninstall: sudo apt remove petrocli / sudo dpkg -r petrocli on Linux;
+    Settings → Apps → petrocli → Uninstall, or the auto-generated Uninstall.exe,
+    on Windows.
+
+  I didn't actually run the install/uninstall commands (sudo dpkg -i, apt 
+  remove) — that would modify real system state system-wide, more invasive than
+  anything else done in this session, so I held off without being asked.
+  Everything else (package generation, both invocation styles, the exact .deb
+  filename and its install path) was verified directly. Nothing committed.
+
+✻ Churned for 1m 54s · done 12:30 PM
+
+❯ add a very short design decisions section to the README explaining the        
+  separation between cli parsing csv parsing the Sample model and command       
+  business logic, design patterns used explain why no external runtime          
+  libraries are required and mention the use of c++17                           
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(README.md)
+  ⎿  Added 19 lines
+      169  S005                0.550
+      170  ```
+      171  
+      172 +## Design Decisions                                           
+      173 +                                                              
+      174 +- **Separation of concerns**: `cli.h`/`cli.cpp` only parse arg
+          +uments and                                                    
+      175 +  dispatch to a command; `csv.h`/`csv.cpp` only read and parse
+          + CSV rows;                                                    
+      176 +  `model.h`'s `Sample` is a plain data struct; each command's 
+          +actual                                                        
+      177 +  behavior lives in its own class in `commands.h`/`commands.cp
+          +p`, built                                                     
+      178 +  on small, CLI-independent functions (`validation.h`, `stats.
+          +h`,                                                           
+      179 +  `filter.h`, `rank.h`) that are each testable on their own.  
+      180 +- **Command pattern**: every subcommand is a class implementin
+          +g the                                                         
+      181 +  `Command` interface (`command.h`), constructed by a small   
+      182 +  name-to-factory registry in `cli.cpp`. Adding a subcommand m
+          +eans                                                          
+      183 +  writing one class and registering it, not growing a switch s
+          +tatement.                                                     
+      184 +- **No external runtime libraries**: only the C++ standard lib
+          +rary is                                                       
+      185 +  used at runtime. GoogleTest is a build/test-time dependency 
+          +only                                                          
+      186 +  (fetched via CMake FetchContent) and is never linked into th
+          +e shipped                                                     
+      187 +  `petrocli` binary.                                          
+      188 +- **C++17** is the project's language standard throughout (`st
+          +d::optional`,                                                 
+      189 +  `std::filesystem`, structured bindings, and similar).       
+      190 +                                                              
+      191  See `CLAUDE.md` for project conventions.
+
+● Added a short Design Decisions section at the end of README.md covering: the
+  separation between CLI parsing, CSV parsing, the Sample model, and per-command
+  business logic (built on small CLI-independent functions); the Command
+  pattern (interface + factory registry); the no-external-runtime-dependency
+  guarantee (GoogleTest is build/test-only, never linked into the shipped
+  binary); and the C++17 standard. Nothing committed.
+
+✻ Worked for 26s · done 12:31 PM
+
+❯ i think it's better readable to organize in bullets                           
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(README.md)
+  ⎿  Added 8 lines, removed 6 lines
+      171  
+      172  ## Design Decisions
+      173  
+      174 -- **Separation of concerns**: `cli.h`/`cli.cpp` only parse arg
+          -uments and                                                    
+      175 -  dispatch to a command; `csv.h`/`csv.cpp` only read and parse
+          - CSV rows;                                                    
+      176 -  `model.h`'s `Sample` is a plain data struct; each command's 
+          -actual                                                        
+      177 -  behavior lives in its own class in `commands.h`/`commands.cp
+          -p`, built                                                     
+      178 -  on small, CLI-independent functions (`validation.h`, `stats.
+          -h`,                                                           
+      179 -  `filter.h`, `rank.h`) that are each testable on their own.  
+      174 +- **Separation of concerns**:                                 
+      175 +  - `cli.h`/`cli.cpp` only parse arguments and dispatch to a c
+          +ommand.                                                       
+      176 +  - `csv.h`/`csv.cpp` only read and parse CSV rows.           
+      177 +  - `model.h`'s `Sample` is a plain data struct.              
+      178 +  - Each command's actual behavior lives in its own class in  
+      179 +    `commands.h`/`commands.cpp`, built on small, CLI-independe
+          +nt                                                            
+      180 +    functions (`validation.h`, `stats.h`, `filter.h`, `rank.h`
+          +) that                                                        
+      181 +    are each testable on their own.                           
+      182  - **Command pattern**: every subcommand is a class implementin
+           g the
+      183    `Command` interface (`command.h`), constructed by a small
+      184    name-to-factory registry in `cli.cpp`. Adding a subcommand m
+           eans
+
+● Reorganized the "Separation of concerns" bullet into four sub-bullets (one per
+  module), leaving the other three top-level bullets as-is since each was
+  already a single focused point.
+
+✻ Cooked for 11s · done 12:32 PM
+
+❯ commit this                                                                   
+
+  Committed 0bd3904, ran 1 shell command (ctrl+o to expand)
+
+● Committed as 0bd3904.
+
+✻ Cooked for 14s · done 12:35 PM
+
+※ recap: Petrocli is a C++17 CLI for petroleum CSV data with check, stats, filter, and rank commands, now documented and CPack-packaged for Windows/Linux; the README's Package and Design Decisions sections just got committed. Next: decide whether to push the 21 local commits to origin/master.
+
+❯ i would like to add in the readme the valgrind command to run with the tests. 
+  should it be added on an existent section or create a new one? analyze. This  
+  is the commmand used on Linux: valgrind --leak-check=full --error-exitcode=1  
+  -s ./build/tests/petrocli_tests                                               
+
+● I'd add it as a subsection under the existing ## Test section (e.g. ### Memory
+  checking (Linux)), not a new top-level section — it's Linux-only and operates
+  on the exact same petrocli_tests binary already documented there, so it reads
+  as "another way to run the tests" rather than a distinct concern. That also
+  matches the pattern already in the README (### Windows as a subsection under
+  ## Build for a platform-specific variant), and would need one addition to
+  Prerequisites noting valgrind is optional/Linux-only, the same way NSIS is
+  called out as optional/Windows-only.
+
+  The main tradeoff: a dedicated top-level ## Memory Checking section would be
+  more discoverable for someone skimming headings, but for a single command this
+  is probably more weight than it needs. Want me to add it under Test?
+
+✻ Brewed for 24s · done 3:59 PM
+
+❯ Add it under Test                                                             
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Valgrind's available. Let's build and verify the exact command works before
+  documenting it.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Confirmed working: 96 tests pass under Valgrind, no leaks, 0 errors, exit code
+  0. Now adding the docs.
+
+  Read 1 file (ctrl+o to expand)
+
+● Adding the valgrind prerequisite note (matching the NSIS pattern) and the new
+  subsection under ## Test.
+
+● Update(README.md)
+  ⎿  Added 3 lines
+      14  - [NSIS](https://nsis.sourceforge.io/) — Windows only, and only
+           needed to
+      15    build the `.exe` installer via `cpack -G NSIS`. Not required 
+          to build, run,
+      16    or test petrocli itself.
+      17 +- [Valgrind](https://valgrind.org/) — Linux only, and only need
+         +ed to run the                                                  
+      18 +  test suite under memory checking. Not required for a normal b
+         +uild, run,                                                     
+      19 +  or test.                                                     
+      20  
+      21  GoogleTest is fetched automatically via CMake FetchContent; no 
+          manual setup
+      22  is needed for it.
+
+● Update(README.md)
+  ⎿  Added 9 lines
+      51  ctest --test-dir build --output-on-failure -C Debug   # Windows
+      52  ```
+      53  
+      54 +### Memory checking (Linux)                                    
+      55 +                                                               
+      56 +Runs the test suite under Valgrind; fails with a non-zero exit 
+         +code if                                                        
+      57 +any memory error or leak is detected.                          
+      58 +                                                               
+      59 +```                                                            
+      60 +valgrind --leak-check=full --error-exitcode=1 -s ./build/tests/
+         +petrocli_tests                                                 
+      61 +```                                                            
+      62 +                                                               
+      63  ## Package
+      64  
+      65  Requires NSIS on Windows (see Prerequisites above); on Linux th
+          is
+
+● Let's do a final read-through and clean up the build directory.
+
+  Read 1 file (ctrl+o to expand)
+
+● Reads cleanly and consistently with the rest of the doc. Cleaning up the build
+  directory.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Added:
+
+  - Prerequisites: a Valgrind bullet, scoped exactly like the existing NSIS one
+    — Linux-only, optional, not needed for a normal build/run/test.
+  - ### Memory checking (Linux) subsection under ## Test: your exact command,
+    with a one-line explanation of what it does.
+
+  Verified the command itself works end-to-end on this machine first: built the
+  project, ran it, and confirmed 96 tests, 0 errors, no leaks, exit code 0.
+  Nothing committed.
+
+✻ Churned for 44s · done 4:01 PM
+※ recap: We've built petrocli, a C++17 CLI tool for petroleum CSV data, through incremental commits with tests, packaging, and docs. Just added a Valgrind memory-check command to the README; next step is committing this change.
+
+❯ commit this                                                                   
+
+  Committed cbadf70, ran 1 shell command (ctrl+o to expand)
+
+● Committed as cbadf70.
+
+✻ Brewed for 11s · done 4:07 PM
+
+❯ i used this to cpack generation on windows using Ninja. Add in the            
+  documentation a section specific for this: cmake -S . -B build -G Ninja       
+  cmake --build build                                                           
+  cpack --config build\CPackConfig.cmake -G NSIS                                
+
+  Read 1 file (ctrl+o to expand)
+
+● Adding a "Windows with Ninja" subsection right after the main Package
+  instructions, before Install/Uninstall.
+
+● Update(README.md)
+  ⎿  Added 13 lines
+       82  automatically (DEB on Linux, NSIS on Windows), and the package
+            is
+       83  written into `build/`. On Linux this is `petrocli-0.1.0-Linux.
+           deb`.
+       84  
+       85 +### Windows with Ninja                                        
+       86 +                                                              
+       87 +If Ninja is installed, it can be used instead of the default V
+          +isual                                                         
+       88 +Studio generator for a single-config build-and-package flow. R
+          +un from                                                       
+       89 +a "Developer Command Prompt for VS" (or after `vcvarsall.bat`)
+          + so the                                                       
+       90 +MSVC compiler is on `PATH`:                                   
+       91 +                                                              
+       92 +```                                                           
+       93 +cmake -S . -B build -G Ninja                                  
+       94 +cmake --build build                                           
+       95 +cpack --config build\CPackConfig.cmake -G NSIS                
+       96 +```                                                           
+       97 +                                                              
+       98  ### Install
+       99  
+      100  - Linux: `sudo dpkg -i build/petrocli-0.1.0-Linux.deb` install
+           s the
+
+  Read 1 file (ctrl+o to expand)
+
+● Added a "Windows with Ninja" subsection under ## Package, with your exact
+  verified command sequence preserved as-is (I didn't second-guess or "fix" it —
+  you tested it on real Windows, which I can't do from here). Placed a short
+  note on why someone would use it (single-config alternative to the default
+  Visual Studio generator) and the same Developer Command Prompt reminder the
+  other Windows sections already have, for consistency. Nothing committed.
+
+✻ Brewed for 35s · done 4:09 PM
+
+※ recap: Built out petrocli's CSV commands and cross-platform build/packaging setup, now documenting a Windows Ninja packaging workflow in the README. Next: decide whether to commit this README update.
+
+❯ This were the commands for Cpack generation on Linux, add it too: cmake -S .  
+  -B build -DCMAKE_BUILD_TYPE=Release                                           
+  cmake --build build                                                           
+  cpack --config build/CPackConfig.cmake                                        
+
+● Let's verify this exact sequence before documenting it.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Verified. Adding it as a "Linux (Release)" subsection, placed before "Windows
+  with Ninja" to match the Linux-then-Windows ordering used elsewhere in the
+  doc.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(README.md)
+  ⎿  Added 10 lines
+      82  automatically (DEB on Linux, NSIS on Windows), and the package 
+          is
+      83  written into `build/`. On Linux this is `petrocli-0.1.0-Linux.d
+          eb`.
+      84  
+      85 +### Linux (Release)                                            
+      86 +                                                               
+      87 +Packaging is typically done from a Release build rather than De
+         +bug:                                                           
+      88 +                                                               
+      89 +```                                                            
+      90 +cmake -S . -B build -DCMAKE_BUILD_TYPE=Release                 
+      91 +cmake --build build                                            
+      92 +cpack --config build/CPackConfig.cmake                         
+      93 +```                                                            
+      94 +                                                               
+      95  ### Windows with Ninja
+      96  
+      97  If Ninja is installed, it can be used instead of the default Vi
+          sual
+
+● Added a "Linux (Release)" subsection under ## Package, right before "Windows
+  with Ninja", with your exact command sequence. Verified end-to-end on this
+  machine first (configured Release, built, ran cpack --config 
+  build/CPackConfig.cmake, produced petrocli-0.1.0-Linux.deb correctly), then
+  cleaned up the generated artifacts. Nothing committed.
+
+✻ Cooked for 46s · done 4:15 PM
+
+❯ commit this                                                                   
+
+  Committed da9475b, ran 1 shell command (ctrl+o to expand)
+
+● Committed as da9475b.
+
+✻ Worked for 12s · done 4:15 PM
