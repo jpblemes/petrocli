@@ -19,6 +19,7 @@ petrocli/
     cli.cpp                # CLI argument parser and command dispatch
     csv.cpp                # CSV handling
     commands.cpp           # CLI command implementations
+    filter.cpp             # sample filtering
     stats.cpp              # descriptive statistics
     validation.cpp         # sample validation
   include/petrocli/        # public headers, mirrors src/
@@ -26,6 +27,7 @@ petrocli/
     command.h              # Command interface
     csv.h
     commands.h
+    filter.h
     model.h                # data model
     stats.h
     validation.h
@@ -38,6 +40,7 @@ petrocli/
     cli_test.cpp
     commands_test.cpp
     csv_test.cpp
+    filter_test.cpp
     stats_test.cpp
     validation_test.cpp
     resources/             # fixture files for tests
