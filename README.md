@@ -48,6 +48,43 @@ ctest --test-dir build --output-on-failure           # Linux
 ctest --test-dir build --output-on-failure -C Debug   # Windows
 ```
 
+## Package
+
+Requires NSIS on Windows (see Prerequisites above); on Linux this
+produces a `.deb` instead and needs no extra tooling. Run from the
+`build` directory configured above:
+
+```
+cd build
+cpack
+```
+
+or, equivalently, without leaving the top-level directory:
+
+```
+cmake --build build --target package                  # Linux
+cmake --build build --config Debug --target package    # Windows
+```
+
+Either way, CMake picks the right generator for the current platform
+automatically (DEB on Linux, NSIS on Windows), and the package is
+written into `build/`. On Linux this is `petrocli-0.1.0-Linux.deb`.
+
+### Install
+
+- Linux: `sudo dpkg -i build/petrocli-0.1.0-Linux.deb` installs the
+  `petrocli` binary to `/usr/bin`.
+- Windows: run the generated `.exe` and follow the installer; it
+  installs to `%ProgramFiles%\petrocli` by default.
+
+### Uninstall
+
+- Linux: `sudo apt remove petrocli` (or `sudo dpkg -r petrocli`).
+- Windows: use Settings → Apps → petrocli → Uninstall, or run
+  `Uninstall.exe` directly from the install directory
+  (`%ProgramFiles%\petrocli\Uninstall.exe`) — NSIS generates this
+  uninstaller automatically.
+
 ## Commands
 
 The examples below run against the sample dataset at `data/data.csv`
@@ -131,5 +168,26 @@ S011                0.350
 S004                0.450
 S005                0.550
 ```
+
+## Design Decisions
+
+- **Separation of concerns**:
+  - `cli.h`/`cli.cpp` only parse arguments and dispatch to a command.
+  - `csv.h`/`csv.cpp` only read and parse CSV rows.
+  - `model.h`'s `Sample` is a plain data struct.
+  - Each command's actual behavior lives in its own class in
+    `commands.h`/`commands.cpp`, built on small, CLI-independent
+    functions (`validation.h`, `stats.h`, `filter.h`, `rank.h`) that
+    are each testable on their own.
+- **Command pattern**: every subcommand is a class implementing the
+  `Command` interface (`command.h`), constructed by a small
+  name-to-factory registry in `cli.cpp`. Adding a subcommand means
+  writing one class and registering it, not growing a switch statement.
+- **No external runtime libraries**: only the C++ standard library is
+  used at runtime. GoogleTest is a build/test-time dependency only
+  (fetched via CMake FetchContent) and is never linked into the shipped
+  `petrocli` binary.
+- **C++17** is the project's language standard throughout (`std::optional`,
+  `std::filesystem`, structured bindings, and similar).
 
 See `CLAUDE.md` for project conventions.
