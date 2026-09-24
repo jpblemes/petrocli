@@ -13,15 +13,31 @@ bool ByApiGravityDescThenSampleIdAsc(const Sample& a, const Sample& b) {
   return a.sample_id < b.sample_id;
 }
 
+bool BySulfurPctAscThenSampleIdAsc(const Sample& a, const Sample& b) {
+  if (a.sulfur_pct != b.sulfur_pct) {
+    return a.sulfur_pct < b.sulfur_pct;
+  }
+  return a.sample_id < b.sample_id;
+}
+
+std::vector<Sample> RankedAndLimited(std::vector<Sample> samples,
+                                      bool (*less)(const Sample&, const Sample&),
+                                      std::size_t limit) {
+  std::sort(samples.begin(), samples.end(), less);
+  if (samples.size() > limit) {
+    samples.resize(limit);
+  }
+  return samples;
+}
+
 }  // namespace
 
 std::vector<Sample> RankByApiGravity(const std::vector<Sample>& samples, std::size_t limit) {
-  std::vector<Sample> ranked = samples;
-  std::sort(ranked.begin(), ranked.end(), ByApiGravityDescThenSampleIdAsc);
-  if (ranked.size() > limit) {
-    ranked.resize(limit);
-  }
-  return ranked;
+  return RankedAndLimited(samples, ByApiGravityDescThenSampleIdAsc, limit);
+}
+
+std::vector<Sample> RankBySulfurPct(const std::vector<Sample>& samples, std::size_t limit) {
+  return RankedAndLimited(samples, BySulfurPctAscThenSampleIdAsc, limit);
 }
 
 }  // namespace petrocli
