@@ -190,3 +190,9 @@ Format:
 ```
 clang-format -i src/*.cpp src/*.h
 ```
+
+Package (run from `build/`, after building):
+```
+cpack -G DEB     # Linux
+cpack -G NSIS    # Windows
+```
