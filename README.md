@@ -82,6 +82,29 @@ Either way, CMake picks the right generator for the current platform
 automatically (DEB on Linux, NSIS on Windows), and the package is
 written into `build/`. On Linux this is `petrocli-0.1.0-Linux.deb`.
 
+### Linux (Release)
+
+Packaging is typically done from a Release build rather than Debug:
+
+```
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+cpack --config build/CPackConfig.cmake
+```
+
+### Windows with Ninja
+
+If Ninja is installed, it can be used instead of the default Visual
+Studio generator for a single-config build-and-package flow. Run from
+a "Developer Command Prompt for VS" (or after `vcvarsall.bat`) so the
+MSVC compiler is on `PATH`:
+
+```
+cmake -S . -B build -G Ninja
+cmake --build build
+cpack --config build\CPackConfig.cmake -G NSIS
+```
+
 ### Install
 
 - Linux: `sudo dpkg -i build/petrocli-0.1.0-Linux.deb` installs the
