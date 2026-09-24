@@ -27,6 +27,31 @@ TEST(ParseArgsTest, ParsesStatsWithInput) {
   EXPECT_EQ(stats_command->input_path(), "data.csv");
 }
 
+TEST(ParseArgsTest, ParsesFilterWithAllFlags) {
+  const auto command =
+      ParseArgs({"filter", "--input", "data.csv", "--location", "ALFA", "--depth-min", "1000",
+                 "--depth-max", "1500"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* filter_command = dynamic_cast<FilterCommand*>(command.get());
+  ASSERT_NE(filter_command, nullptr);
+  EXPECT_EQ(filter_command->input_path(), "data.csv");
+  EXPECT_EQ(filter_command->location(), "ALFA");
+  EXPECT_DOUBLE_EQ(filter_command->depth_min(), 1000.0);
+  EXPECT_DOUBLE_EQ(filter_command->depth_max(), 1500.0);
+}
+
+TEST(ParseArgsTest, ThrowsOnFilterMissingFlag) {
+  EXPECT_THROW(ParseArgs({"filter", "--input", "data.csv", "--location", "ALFA"}),
+               std::runtime_error);
+}
+
+TEST(ParseArgsTest, ThrowsOnFilterInvalidDepthValue) {
+  EXPECT_THROW(ParseArgs({"filter", "--input", "data.csv", "--location", "ALFA", "--depth-min",
+                          "abc", "--depth-max", "1500"}),
+               std::runtime_error);
+}
+
 TEST(ParseArgsTest, ThrowsOnNoArguments) {
   EXPECT_THROW(ParseArgs({}), std::runtime_error);
 }

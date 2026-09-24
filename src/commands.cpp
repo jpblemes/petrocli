@@ -3,13 +3,16 @@
 #include <cstddef>
 #include <iomanip>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "petrocli/csv.h"
+#include "petrocli/filter.h"
 #include "petrocli/stats.h"
+#include "petrocli/validation.h"
 
 namespace petrocli {
 
@@ -67,6 +70,32 @@ void PrintStatsRow(std::ostream& out, const std::string& column, const Descripti
       << std::setw(kFieldWidth) << *stats.maximum << std::setw(kFieldWidth) << *stats.mean << "\n";
 }
 
+const char kFilterUsage[] =
+    "usage: petrocli filter --input <path> --location <location> "
+    "--depth-min <value> --depth-max <value>";
+
+constexpr int kIdWidth = 12;
+constexpr int kDepthWidth = 10;
+constexpr int kApiGravityWidth = 14;
+constexpr int kSulfurPctWidth = 13;
+constexpr int kDensityWidth = 16;
+constexpr int kLocationWidth = 10;
+
+void PrintFilterHeader(std::ostream& out) {
+  out << std::left << std::setw(kIdWidth) << "sample_id" << std::right << std::setw(kDepthWidth)
+      << "depth_m" << std::setw(kApiGravityWidth) << "api_gravity" << std::setw(kSulfurPctWidth)
+      << "sulfur_pct" << std::setw(kDensityWidth) << "density_g_cm3" << std::setw(kLocationWidth)
+      << "location" << "\n";
+}
+
+void PrintFilterRow(std::ostream& out, const Sample& sample) {
+  out << std::left << std::setw(kIdWidth) << sample.sample_id << std::right
+      << std::setw(kDepthWidth) << static_cast<long long>(sample.depth_m) << std::fixed
+      << std::setprecision(3) << std::setw(kApiGravityWidth) << sample.api_gravity
+      << std::setw(kSulfurPctWidth) << sample.sulfur_pct << std::setw(kDensityWidth)
+      << sample.density_g_cm3 << std::setw(kLocationWidth) << sample.location << "\n";
+}
+
 }  // namespace
 
 std::unique_ptr<Command> CheckCommand::Parse(const std::vector<std::string>& args) {
@@ -96,6 +125,58 @@ int StatsCommand::Execute(std::ostream& out) const {
   PrintStatsRow(out, "sulfur_pct", ComputeDescriptiveStats(ExtractColumn(samples, &Sample::sulfur_pct)));
   PrintStatsRow(out, "density_g_cm3",
                 ComputeDescriptiveStats(ExtractColumn(samples, &Sample::density_g_cm3)));
+  return 0;
+}
+
+std::unique_ptr<Command> FilterCommand::Parse(const std::vector<std::string>& args) {
+  std::string input_path;
+  std::string location;
+  std::optional<double> depth_min;
+  std::optional<double> depth_max;
+
+  for (std::size_t i = 0; i < args.size(); ++i) {
+    if (i + 1 >= args.size()) {
+      throw std::runtime_error("'" + args[i] + "' requires a value");
+    }
+    const std::string& flag = args[i];
+    const std::string& value = args[++i];
+
+    if (flag == "--input") {
+      input_path = value;
+    } else if (flag == "--location") {
+      location = value;
+    } else if (flag == "--depth-min") {
+      depth_min = ValidateNumericField(value, "--depth-min");
+    } else if (flag == "--depth-max") {
+      depth_max = ValidateNumericField(value, "--depth-max");
+    } else {
+      throw std::runtime_error("unknown argument: '" + flag + "'");
+    }
+  }
+
+  if (input_path.empty() || location.empty() || !depth_min.has_value() || !depth_max.has_value()) {
+    throw std::runtime_error(kFilterUsage);
+  }
+
+  return std::make_unique<FilterCommand>(std::move(input_path), std::move(location), *depth_min,
+                                          *depth_max);
+}
+
+FilterCommand::FilterCommand(std::string input_path, std::string location, double depth_min,
+                              double depth_max)
+    : input_path_(std::move(input_path)),
+      location_(std::move(location)),
+      depth_min_(depth_min),
+      depth_max_(depth_max) {}
+
+int FilterCommand::Execute(std::ostream& out) const {
+  const std::vector<Sample> samples = ReadCsv(input_path_);
+  const std::vector<Sample> filtered = FilterSamples(samples, location_, depth_min_, depth_max_);
+
+  PrintFilterHeader(out);
+  for (const Sample& sample : filtered) {
+    PrintFilterRow(out, sample);
+  }
   return 0;
 }
 

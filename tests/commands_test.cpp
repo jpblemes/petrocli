@@ -97,5 +97,54 @@ TEST_F(StatsCommandTest, ThrowsOnInvalidFile) {
   EXPECT_THROW(command.Execute(out), std::runtime_error);
 }
 
+class FilterCommandTest : public ::testing::Test {
+ protected:
+  void TearDown() override { std::filesystem::remove(path_); }
+
+  std::filesystem::path path_ =
+      std::filesystem::temp_directory_path() / "petrocli_filter_command_test.csv";
+};
+
+TEST_F(FilterCommandTest, PrintsMatchingSamplesAsAlignedTable) {
+  WriteFile(path_,
+            "sample_id,depth_m,api_gravity,sulfur_pct,density_g_cm3,location\n"
+            "S001,1200,29.8,1.10,0.878,ALFA\n"
+            "S002,1500,31.2,0.85,0.865,ALFA\n"
+            "S003,2000,27.5,1.60,0.892,ALFA\n"
+            "S004,1500,34.0,0.45,0.845,BETA\n");
+
+  const FilterCommand command(path_.string(), "ALFA", 1000, 1500);
+  std::ostringstream out;
+  const int exit_code = command.Execute(out);
+
+  EXPECT_EQ(exit_code, 0);
+  EXPECT_EQ(out.str(),
+            "sample_id      depth_m   api_gravity   sulfur_pct   density_g_cm3  location\n"
+            "S001              1200        29.800        1.100           0.878      ALFA\n"
+            "S002              1500        31.200        0.850           0.865      ALFA\n");
+}
+
+TEST_F(FilterCommandTest, PrintsHeaderOnlyWhenNoMatches) {
+  WriteFile(path_,
+            "sample_id,depth_m,api_gravity,sulfur_pct,density_g_cm3,location\n"
+            "S001,1200,29.8,1.10,0.878,ALFA\n");
+
+  const FilterCommand command(path_.string(), "GAMA", 0, 5000);
+  std::ostringstream out;
+  const int exit_code = command.Execute(out);
+
+  EXPECT_EQ(exit_code, 0);
+  EXPECT_EQ(out.str(),
+            "sample_id      depth_m   api_gravity   sulfur_pct   density_g_cm3  location\n");
+}
+
+TEST_F(FilterCommandTest, ThrowsOnInvalidFile) {
+  WriteFile(path_, "wrong,header,shape\n");
+
+  const FilterCommand command(path_.string(), "ALFA", 0, 5000);
+  std::ostringstream out;
+  EXPECT_THROW(command.Execute(out), std::runtime_error);
+}
+
 }  // namespace
 }  // namespace petrocli
