@@ -12,7 +12,7 @@ namespace petrocli {
 namespace {
 
 void WriteFile(const std::filesystem::path& path, const std::string& content) {
-  std::ofstream file(path);
+  std::ofstream file(path, std::ios::binary);
   file << content;
 }
 

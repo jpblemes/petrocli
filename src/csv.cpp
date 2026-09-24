@@ -50,7 +50,7 @@ Sample ParseSampleFields(const std::vector<std::string>& fields) {
 }
 
 std::vector<Sample> ReadCsv(const std::string& path) {
-  std::ifstream file(path);
+  std::ifstream file(path, std::ios::binary);
   if (!file.is_open()) {
     throw std::runtime_error("could not open CSV file: " + path);
   }
