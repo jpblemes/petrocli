@@ -2,6 +2,7 @@ add_library(petrocli_lib
     cli.cpp
     csv.cpp
     commands.cpp
+    filter.cpp
     stats.cpp
     validation.cpp
 )
