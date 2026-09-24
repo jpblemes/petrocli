@@ -1,5 +1,6 @@
 #include "petrocli/commands.h"
 
+#include <cmath>
 #include <cstddef>
 #include <iomanip>
 #include <memory>
@@ -11,6 +12,7 @@
 
 #include "petrocli/csv.h"
 #include "petrocli/filter.h"
+#include "petrocli/rank.h"
 #include "petrocli/stats.h"
 #include "petrocli/validation.h"
 
@@ -96,6 +98,39 @@ void PrintFilterRow(std::ostream& out, const Sample& sample) {
       << sample.density_g_cm3 << std::setw(kLocationWidth) << sample.location << "\n";
 }
 
+const char kRankUsage[] = "usage: petrocli rank --input <path> --by <api|sulfur> --top <N>";
+
+RankBy ParseRankBy(const std::string& value) {
+  if (value == "api") {
+    return RankBy::kApiGravity;
+  }
+  if (value == "sulfur") {
+    return RankBy::kSulfurPct;
+  }
+  throw std::runtime_error("invalid --by value: '" + value + "', expected 'api' or 'sulfur'");
+}
+
+std::size_t ParseTopArg(const std::string& value) {
+  const double parsed = ValidateNumericField(value, "--top");
+  if (parsed <= 0.0 || parsed != std::trunc(parsed)) {
+    throw std::runtime_error("invalid --top value: must be a positive integer");
+  }
+  return static_cast<std::size_t>(parsed);
+}
+
+constexpr int kRankIdWidth = 12;
+constexpr int kRankValueWidth = 13;
+
+void PrintRankHeader(std::ostream& out, const std::string& value_column) {
+  out << std::left << std::setw(kRankIdWidth) << "sample_id" << std::right
+      << std::setw(kRankValueWidth) << value_column << "\n";
+}
+
+void PrintRankRow(std::ostream& out, const std::string& sample_id, double value) {
+  out << std::left << std::setw(kRankIdWidth) << sample_id << std::right << std::fixed
+      << std::setprecision(3) << std::setw(kRankValueWidth) << value << "\n";
+}
+
 }  // namespace
 
 std::unique_ptr<Command> CheckCommand::Parse(const std::vector<std::string>& args) {
@@ -176,6 +211,63 @@ int FilterCommand::Execute(std::ostream& out) const {
   PrintFilterHeader(out);
   for (const Sample& sample : filtered) {
     PrintFilterRow(out, sample);
+  }
+  return 0;
+}
+
+std::unique_ptr<Command> RankCommand::Parse(const std::vector<std::string>& args) {
+  std::string input_path;
+  std::optional<RankBy> rank_by;
+  std::optional<std::size_t> top;
+
+  for (std::size_t i = 0; i < args.size(); ++i) {
+    if (i + 1 >= args.size()) {
+      throw std::runtime_error("'" + args[i] + "' requires a value");
+    }
+    const std::string& flag = args[i];
+    const std::string& value = args[++i];
+
+    if (flag == "--input") {
+      input_path = value;
+    } else if (flag == "--by") {
+      rank_by = ParseRankBy(value);
+    } else if (flag == "--top") {
+      top = ParseTopArg(value);
+    } else {
+      throw std::runtime_error("unknown argument: '" + flag + "'");
+    }
+  }
+
+  if (input_path.empty() || !rank_by.has_value() || !top.has_value()) {
+    throw std::runtime_error(kRankUsage);
+  }
+
+  return std::make_unique<RankCommand>(std::move(input_path), *rank_by, *top);
+}
+
+RankCommand::RankCommand(std::string input_path, RankBy rank_by, std::size_t top)
+    : input_path_(std::move(input_path)), rank_by_(rank_by), top_(top) {}
+
+int RankCommand::Execute(std::ostream& out) const {
+  const std::vector<Sample> samples = ReadCsv(input_path_);
+
+  std::vector<Sample> ranked;
+  std::string value_column;
+  double Sample::*value_field;
+
+  if (rank_by_ == RankBy::kApiGravity) {
+    ranked = RankByApiGravity(samples, top_);
+    value_column = "api_gravity";
+    value_field = &Sample::api_gravity;
+  } else {
+    ranked = RankBySulfurPct(samples, top_);
+    value_column = "sulfur_pct";
+    value_field = &Sample::sulfur_pct;
+  }
+
+  PrintRankHeader(out, value_column);
+  for (const Sample& sample : ranked) {
+    PrintRankRow(out, sample.sample_id, sample.*value_field);
   }
   return 0;
 }

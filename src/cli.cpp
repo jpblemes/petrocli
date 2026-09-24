@@ -19,6 +19,7 @@ const std::map<std::string, CommandFactory>& CommandFactories() {
   static const std::map<std::string, CommandFactory> kFactories = {
       {"check", &CheckCommand::Parse},
       {"filter", &FilterCommand::Parse},
+      {"rank", &RankCommand::Parse},
       {"stats", &StatsCommand::Parse},
   };
   return kFactories;
@@ -28,7 +29,8 @@ const std::map<std::string, CommandFactory>& CommandFactories() {
 
 std::unique_ptr<Command> ParseArgs(const std::vector<std::string>& args) {
   if (args.empty()) {
-    throw std::runtime_error("usage: petrocli <check|stats|filter> --input <path> [options]");
+    throw std::runtime_error(
+        "usage: petrocli <check|stats|filter|rank> --input <path> [options]");
   }
 
   const auto& factories = CommandFactories();

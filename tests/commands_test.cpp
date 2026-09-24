@@ -146,5 +146,57 @@ TEST_F(FilterCommandTest, ThrowsOnInvalidFile) {
   EXPECT_THROW(command.Execute(out), std::runtime_error);
 }
 
+class RankCommandTest : public ::testing::Test {
+ protected:
+  void TearDown() override { std::filesystem::remove(path_); }
+
+  std::filesystem::path path_ =
+      std::filesystem::temp_directory_path() / "petrocli_rank_command_test.csv";
+};
+
+TEST_F(RankCommandTest, PrintsTopSamplesByApiGravity) {
+  WriteFile(path_,
+            "sample_id,depth_m,api_gravity,sulfur_pct,density_g_cm3,location\n"
+            "S001,1200,29.8,1.10,0.878,ALFA\n"
+            "S002,1500,31.2,0.85,0.865,ALFA\n"
+            "S003,2000,27.5,1.60,0.892,ALFA\n");
+
+  const RankCommand command(path_.string(), RankBy::kApiGravity, 2);
+  std::ostringstream out;
+  const int exit_code = command.Execute(out);
+
+  EXPECT_EQ(exit_code, 0);
+  EXPECT_EQ(out.str(),
+            "sample_id     api_gravity\n"
+            "S002               31.200\n"
+            "S001               29.800\n");
+}
+
+TEST_F(RankCommandTest, PrintsTopSamplesBySulfurPct) {
+  WriteFile(path_,
+            "sample_id,depth_m,api_gravity,sulfur_pct,density_g_cm3,location\n"
+            "S001,1200,29.8,1.10,0.878,ALFA\n"
+            "S002,1500,31.2,0.85,0.865,ALFA\n"
+            "S003,2000,27.5,1.60,0.892,ALFA\n");
+
+  const RankCommand command(path_.string(), RankBy::kSulfurPct, 2);
+  std::ostringstream out;
+  const int exit_code = command.Execute(out);
+
+  EXPECT_EQ(exit_code, 0);
+  EXPECT_EQ(out.str(),
+            "sample_id      sulfur_pct\n"
+            "S002                0.850\n"
+            "S001                1.100\n");
+}
+
+TEST_F(RankCommandTest, ThrowsOnInvalidFile) {
+  WriteFile(path_, "wrong,header,shape\n");
+
+  const RankCommand command(path_.string(), RankBy::kApiGravity, 5);
+  std::ostringstream out;
+  EXPECT_THROW(command.Execute(out), std::runtime_error);
+}
+
 }  // namespace
 }  // namespace petrocli

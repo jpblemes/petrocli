@@ -52,6 +52,46 @@ TEST(ParseArgsTest, ThrowsOnFilterInvalidDepthValue) {
                std::runtime_error);
 }
 
+TEST(ParseArgsTest, ParsesRankWithAllFlags) {
+  const auto command = ParseArgs({"rank", "--input", "data.csv", "--by", "api", "--top", "5"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* rank_command = dynamic_cast<RankCommand*>(command.get());
+  ASSERT_NE(rank_command, nullptr);
+  EXPECT_EQ(rank_command->input_path(), "data.csv");
+  EXPECT_EQ(rank_command->rank_by(), RankBy::kApiGravity);
+  EXPECT_EQ(rank_command->top(), 5u);
+}
+
+TEST(ParseArgsTest, ParsesRankBySulfur) {
+  const auto command = ParseArgs({"rank", "--input", "data.csv", "--by", "sulfur", "--top", "3"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* rank_command = dynamic_cast<RankCommand*>(command.get());
+  ASSERT_NE(rank_command, nullptr);
+  EXPECT_EQ(rank_command->rank_by(), RankBy::kSulfurPct);
+}
+
+TEST(ParseArgsTest, ThrowsOnRankMissingFlag) {
+  EXPECT_THROW(ParseArgs({"rank", "--input", "data.csv", "--by", "api"}), std::runtime_error);
+}
+
+TEST(ParseArgsTest, ThrowsOnRankInvalidBy) {
+  EXPECT_THROW(
+      ParseArgs({"rank", "--input", "data.csv", "--by", "bogus", "--top", "5"}),
+      std::runtime_error);
+}
+
+TEST(ParseArgsTest, ThrowsOnRankNonPositiveTop) {
+  EXPECT_THROW(ParseArgs({"rank", "--input", "data.csv", "--by", "api", "--top", "0"}),
+               std::runtime_error);
+}
+
+TEST(ParseArgsTest, ThrowsOnRankFractionalTop) {
+  EXPECT_THROW(ParseArgs({"rank", "--input", "data.csv", "--by", "api", "--top", "2.5"}),
+               std::runtime_error);
+}
+
 TEST(ParseArgsTest, ThrowsOnNoArguments) {
   EXPECT_THROW(ParseArgs({}), std::runtime_error);
 }

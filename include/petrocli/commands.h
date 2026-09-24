@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -65,6 +66,34 @@ class FilterCommand : public Command {
   std::string location_;
   double depth_min_;
   double depth_max_;
+};
+
+/** Which numeric field to rank samples by. */
+enum class RankBy {
+  kApiGravity,
+  kSulfurPct,
+};
+
+/** Prints, as a simple table, the top-N samples ranked by
+ *  api_gravity or sulfur_pct. */
+class RankCommand : public Command {
+ public:
+  /** Parses `args` into a RankCommand; throws std::runtime_error
+   *  on invalid usage. */
+  static std::unique_ptr<Command> Parse(const std::vector<std::string>& args);
+
+  RankCommand(std::string input_path, RankBy rank_by, std::size_t top);
+
+  int Execute(std::ostream& out) const override;
+
+  const std::string& input_path() const { return input_path_; }
+  RankBy rank_by() const { return rank_by_; }
+  std::size_t top() const { return top_; }
+
+ private:
+  std::string input_path_;
+  RankBy rank_by_;
+  std::size_t top_;
 };
 
 }  // namespace petrocli
