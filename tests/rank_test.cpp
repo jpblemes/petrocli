@@ -90,6 +90,19 @@ TEST(RankByApiGravityTest, ReturnsEmptyForEmptyInput) {
   EXPECT_TRUE(RankByApiGravity({}, 5).empty());
 }
 
+TEST(RankByApiGravityTest, PreservesInputOrderForExactDuplicateTies) {
+  Sample first = MakeSample("S001", 30.0);
+  first.location = "FIRST";
+  Sample second = MakeSample("S001", 30.0);
+  second.location = "SECOND";
+
+  const std::vector<Sample> ranked = RankByApiGravity({first, second}, 2);
+
+  ASSERT_EQ(ranked.size(), 2u);
+  EXPECT_EQ(ranked[0].location, "FIRST");
+  EXPECT_EQ(ranked[1].location, "SECOND");
+}
+
 TEST(RankBySulfurPctTest, OrdersBySulfurPctAscending) {
   const std::vector<Sample> samples = {
       MakeSampleWithSulfurPct("S001", 2.0),
@@ -147,6 +160,19 @@ TEST(RankBySulfurPctTest, ReturnsEmptyWhenLimitIsZero) {
 
 TEST(RankBySulfurPctTest, ReturnsEmptyForEmptyInput) {
   EXPECT_TRUE(RankBySulfurPct({}, 5).empty());
+}
+
+TEST(RankBySulfurPctTest, PreservesInputOrderForExactDuplicateTies) {
+  Sample first = MakeSampleWithSulfurPct("S001", 1.0);
+  first.location = "FIRST";
+  Sample second = MakeSampleWithSulfurPct("S001", 1.0);
+  second.location = "SECOND";
+
+  const std::vector<Sample> ranked = RankBySulfurPct({first, second}, 2);
+
+  ASSERT_EQ(ranked.size(), 2u);
+  EXPECT_EQ(ranked[0].location, "FIRST");
+  EXPECT_EQ(ranked[1].location, "SECOND");
 }
 
 }  // namespace

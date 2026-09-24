@@ -23,7 +23,10 @@ bool BySulfurPctAscThenSampleIdAsc(const Sample& a, const Sample& b) {
 std::vector<Sample> RankedAndLimited(std::vector<Sample> samples,
                                       bool (*less)(const Sample&, const Sample&),
                                       std::size_t limit) {
-  std::sort(samples.begin(), samples.end(), less);
+  // stable_sort: std::sort isn't guaranteed stable, so two samples that
+  // tie on both the ranked field and sample_id could otherwise order
+  // differently between standard library implementations.
+  std::stable_sort(samples.begin(), samples.end(), less);
   if (samples.size() > limit) {
     samples.resize(limit);
   }
