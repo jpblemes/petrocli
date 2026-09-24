@@ -58,6 +58,9 @@ std::vector<Sample> ReadCsv(const std::string& path) {
   std::string line;
 
   if (!std::getline(file, line)) {
+    if (file.bad()) {
+      throw std::runtime_error(path + ": error reading file");
+    }
     throw std::runtime_error(path + ": empty file, expected a header row");
   }
   StripTrailingCr(line);
@@ -86,6 +89,10 @@ std::vector<Sample> ReadCsv(const std::string& path) {
       throw std::runtime_error(
           path + ":" + std::to_string(line_number) + ": " + e.what());
     }
+  }
+
+  if (file.bad()) {
+    throw std::runtime_error(path + ": error reading file");
   }
 
   return samples;

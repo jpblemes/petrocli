@@ -64,7 +64,7 @@ std::unique_ptr<Command> ParseArgs(const std::vector<std::string>& args) {
   const auto& factories = CommandFactories();
   const auto it = factories.find(args[0]);
   if (it == factories.end()) {
-    throw std::runtime_error("unknown command: '" + args[0] + "'");
+    throw std::runtime_error("unknown command: '" + args[0] + "'\nRun 'petrocli --help' for details.");
   }
 
   return it->second(std::vector<std::string>(args.begin() + 1, args.end()));

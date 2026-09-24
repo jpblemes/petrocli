@@ -100,6 +100,15 @@ TEST(ParseArgsTest, ThrowsOnUnknownCommand) {
   EXPECT_THROW(ParseArgs({"bogus", "--input", "data.csv"}), std::runtime_error);
 }
 
+TEST(ParseArgsTest, UnknownCommandErrorPointsToHelp) {
+  try {
+    ParseArgs({"bogus"});
+    FAIL() << "expected ParseArgs to throw";
+  } catch (const std::runtime_error& e) {
+    EXPECT_NE(std::string(e.what()).find("--help"), std::string::npos);
+  }
+}
+
 TEST(ParseArgsTest, ThrowsOnMissingInputFlag) {
   EXPECT_THROW(ParseArgs({"check"}), std::runtime_error);
 }
