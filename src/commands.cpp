@@ -1,5 +1,7 @@
 #include "petrocli/commands.h"
 
+#include <cstddef>
+#include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -9,24 +11,32 @@
 
 namespace petrocli {
 
-namespace {
+std::unique_ptr<Command> CheckCommand::Parse(const std::vector<std::string>& args) {
+  std::string input_path;
 
-int RunCheck(const std::string& input_path, std::ostream& out) {
-  const std::vector<Sample> samples = ReadCsv(input_path);
-  out << "valid: " << input_path << " (" << samples.size() << " samples)\n";
-  return 0;
+  for (std::size_t i = 0; i < args.size(); ++i) {
+    if (args[i] != "--input") {
+      throw std::runtime_error("unknown argument: '" + args[i] + "'");
+    }
+    if (i + 1 >= args.size()) {
+      throw std::runtime_error("--input requires a path argument");
+    }
+    input_path = args[++i];
+  }
+
+  if (input_path.empty()) {
+    throw std::runtime_error("usage: petrocli check --input <path>");
+  }
+
+  return std::make_unique<CheckCommand>(std::move(input_path));
 }
 
-}  // namespace
+CheckCommand::CheckCommand(std::string input_path) : input_path_(std::move(input_path)) {}
 
-int RunCommand(const CliOptions& options, std::ostream& out) {
-  switch (options.command) {
-    case Command::kCheck:
-      return RunCheck(options.input_path, out);
-    case Command::kUnknown:
-      break;
-  }
-  throw std::runtime_error("no command specified");
+int CheckCommand::Execute(std::ostream& out) const {
+  const std::vector<Sample> samples = ReadCsv(input_path_);
+  out << "valid: " << input_path_ << " (" << samples.size() << " samples)\n";
+  return 0;
 }
 
 }  // namespace petrocli

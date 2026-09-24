@@ -1,38 +1,41 @@
 #include "petrocli/cli.h"
 
-#include <cstddef>
+#include <functional>
+#include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "petrocli/commands.h"
+
 namespace petrocli {
 
-CliOptions ParseArgs(const std::vector<std::string>& args) {
+namespace {
+
+using CommandFactory = std::function<std::unique_ptr<Command>(const std::vector<std::string>&)>;
+
+const std::map<std::string, CommandFactory>& CommandFactories() {
+  static const std::map<std::string, CommandFactory> kFactories = {
+      {"check", &CheckCommand::Parse},
+  };
+  return kFactories;
+}
+
+}  // namespace
+
+std::unique_ptr<Command> ParseArgs(const std::vector<std::string>& args) {
   if (args.empty()) {
     throw std::runtime_error("usage: petrocli check --input <path>");
   }
-  if (args[0] != "check") {
+
+  const auto& factories = CommandFactories();
+  const auto it = factories.find(args[0]);
+  if (it == factories.end()) {
     throw std::runtime_error("unknown command: '" + args[0] + "'");
   }
 
-  CliOptions options;
-  options.command = Command::kCheck;
-
-  for (std::size_t i = 1; i < args.size(); ++i) {
-    if (args[i] != "--input") {
-      throw std::runtime_error("unknown argument: '" + args[i] + "'");
-    }
-    if (i + 1 >= args.size()) {
-      throw std::runtime_error("--input requires a path argument");
-    }
-    options.input_path = args[++i];
-  }
-
-  if (options.input_path.empty()) {
-    throw std::runtime_error("usage: petrocli check --input <path>");
-  }
-
-  return options;
+  return it->second(std::vector<std::string>(args.begin() + 1, args.end()));
 }
 
 }  // namespace petrocli

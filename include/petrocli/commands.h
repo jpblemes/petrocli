@@ -1,13 +1,29 @@
 #pragma once
 
+#include <memory>
 #include <ostream>
+#include <string>
+#include <vector>
 
-#include "petrocli/cli.h"
+#include "petrocli/command.h"
 
 namespace petrocli {
 
-/** Runs the command selected by `options`, writing output to `out`;
- *  returns the exit code. Throws std::runtime_error on failure. */
-int RunCommand(const CliOptions& options, std::ostream& out);
+/** Validates a CSV file via ReadCsv and reports the result. */
+class CheckCommand : public Command {
+ public:
+  /** Parses `args` into a CheckCommand; throws std::runtime_error
+   *  on invalid usage. */
+  static std::unique_ptr<Command> Parse(const std::vector<std::string>& args);
+
+  explicit CheckCommand(std::string input_path);
+
+  int Execute(std::ostream& out) const override;
+
+  const std::string& input_path() const { return input_path_; }
+
+ private:
+  std::string input_path_;
+};
 
 }  // namespace petrocli

@@ -4,13 +4,18 @@
 
 #include <gtest/gtest.h>
 
+#include "petrocli/commands.h"
+
 namespace petrocli {
 namespace {
 
 TEST(ParseArgsTest, ParsesCheckWithInput) {
-  const CliOptions options = ParseArgs({"check", "--input", "data.csv"});
-  EXPECT_EQ(options.command, Command::kCheck);
-  EXPECT_EQ(options.input_path, "data.csv");
+  const auto command = ParseArgs({"check", "--input", "data.csv"});
+  ASSERT_NE(command, nullptr);
+
+  const auto* check_command = dynamic_cast<CheckCommand*>(command.get());
+  ASSERT_NE(check_command, nullptr);
+  EXPECT_EQ(check_command->input_path(), "data.csv");
 }
 
 TEST(ParseArgsTest, ThrowsOnNoArguments) {
