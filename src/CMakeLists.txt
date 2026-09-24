@@ -14,3 +14,7 @@ target_include_directories(petrocli_lib PUBLIC
 
 add_executable(petrocli main.cpp)
 target_link_libraries(petrocli PRIVATE petrocli_lib)
+
+install(TARGETS petrocli
+    RUNTIME DESTINATION bin
+)
